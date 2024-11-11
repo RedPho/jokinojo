@@ -41,6 +41,6 @@ message ResponseData {
   optional int32 timePosition = 4;
   optional bool resumed = 5;
   optional string videoName = 6;
-  optional string chatMessage = 6
+  optional string chatMessage = 6;
 
 }
