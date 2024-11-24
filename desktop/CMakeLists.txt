@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 project(JoKinoJo)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 find_package(wxWidgets REQUIRED COMPONENTS core base)
 include(${wxWidgets_USE_FILE})

@@ -1,4 +1,6 @@
 #include <wx/wx.h>
+#include "Networking.hh"
+
 
 class MainFrame : public wxFrame {
 public:
@@ -17,7 +19,6 @@ public:
         createButton = new wxButton(nicknamePanel, wxID_ANY, "Create Room", wxPoint(20, 90));
         joinButton = new wxButton(nicknamePanel, wxID_ANY, "Join Room", wxPoint(20, 140));
 
-
         // Chat interface panel
         chatDisplay = new wxTextCtrl(chatPanel, wxID_ANY, "", wxPoint(20, 20), wxSize(350, 400), wxTE_MULTILINE | wxTE_READONLY);
         chatInput = new wxTextCtrl(chatPanel, wxID_ANY, "", wxPoint(20, 430), wxSize(250, -1));
@@ -33,7 +34,6 @@ public:
         // Event bindings
         createButton->Bind(wxEVT_BUTTON, &MainFrame::OnCreate, this);
         joinButton->Bind(wxEVT_BUTTON, &MainFrame::OnJoin, this);
-
         sendButton->Bind(wxEVT_BUTTON, &MainFrame::OnSendMessage, this);
     }
 
@@ -47,6 +47,7 @@ private:
     wxTextCtrl* chatDisplay;
     wxTextCtrl* chatInput;
     wxButton* sendButton;
+    Networking networker = Networking::get_instance();
 
     void OnCreate(wxCommandEvent& event) {
         wxString nickname = nicknameInput->GetValue();
@@ -70,11 +71,14 @@ private:
         chatInput->Clear();
     }
     void OnJoin(wxCommandEvent& event) {
-        wxMessageBox("not implemented yet", "Error", wxOK | wxICON_ERROR);
+        wxString roomId = wxGetTextFromUser(wxT("Enter Room ID:"), wxT("Room ID"));
+        networker.requestJoinRoom();
+
+        wxMessageBox("roomID: " + roomId, "RoomID", wxOK | wxICON_ERROR);
     }
 };
 
-class ChatApp : public wxApp {
+class App : public wxApp {
 public:
     virtual bool OnInit() {
         MainFrame* frame = new MainFrame();
@@ -83,4 +87,4 @@ public:
     }
 };
 
-wxIMPLEMENT_APP(ChatApp);
+wxIMPLEMENT_APP(App);

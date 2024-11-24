@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package jokinojo;
 
-
 message RequestData {
   enum DataType {
     CREATE_ROOM = 0;
@@ -13,15 +12,14 @@ message RequestData {
     READY = 5;
     CHAT = 6;
   }
-  DataType dataType = 0;
-  optional string username = 1;
-  optional int32 roomId = 2;
-  optional int32 timePosition = 3;
-  optional bool resumed = 4;
-  optional string videoName = 5;
-  optional string chatMessage = 6;
-  
-  
+  DataType dataType = 1;
+  optional string username = 2;
+  optional int32 roomId = 3;
+  optional int32 timePosition = 4;
+  optional bool resumed = 5;
+  optional string videoName = 6;
+  optional string chatMessage = 7;
+
 }
 
 message ResponseData {
@@ -34,13 +32,13 @@ message ResponseData {
     READY = 5;
     CHAT = 6;
   }
-  DataType dataType = 0;
-  optional int32 roomId = 1;
-  optional repeated string usernames = 2;
-  optional string username = 3;
-  optional int32 timePosition = 4;
-  optional bool resumed = 5;
-  optional string videoName = 6;
-  optional string chatMessage = 6;
+  DataType dataType = 1;
+  optional int32 roomId = 2;
+  repeated string usernames = 3;
+  optional string username = 4;
+  optional int32 timePosition = 5;
+  optional bool resumed = 6;
+  optional string videoName = 7;
+  optional string chatMessage = 8;
 
 }
