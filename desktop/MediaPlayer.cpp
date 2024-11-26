@@ -30,3 +30,8 @@ bool MediaPlayer::initialize() {
     check_mpv_error(mpv_command(mpv, force_window_cmd));
     return true;
 }
+
+void MediaPlayer::setMediaStatus(bool isPaused, int timePosition) {
+    check_mpv_error(mpv_set_property(mpv, "pause", MPV_FORMAT_FLAG, (void *) &(isPaused)));
+    check_mpv_error(mpv_set_property(mpv, "time-pos", MPV_FORMAT_DOUBLE, &(timePosition)));
+}

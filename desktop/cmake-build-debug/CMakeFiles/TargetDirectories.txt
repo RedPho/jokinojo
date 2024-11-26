@@ -1,3 +1,0 @@
-/home/emin/Classes/semester5/INF303-Project/jokinojo/desktop/cmake-build-debug/CMakeFiles/JoKinoJo.dir
-/home/emin/Classes/semester5/INF303-Project/jokinojo/desktop/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/emin/Classes/semester5/INF303-Project/jokinojo/desktop/cmake-build-debug/CMakeFiles/rebuild_cache.dir

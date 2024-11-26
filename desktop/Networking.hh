@@ -15,30 +15,46 @@ public:
     bool initialize();
     bool handleIncomingData();
 
-    bool requestCreateRoom();
-    bool requestJoinRoom(int roomId, std::string username);
+    bool requestCreateRoom(const std::string username);
+    bool requestJoinRoom(int roomId, const std::string username);
     bool requestQuit();
     bool sendReadyStatus();
 
     bool sendChatMessage();
     bool sendFile(void* fileData);
-    bool sendMediaStatus(bool isPaused, int timePosition);
+    bool sendMediaStatus(int timePosition, bool isPaused);
 
-    std::string get_ip();
-    void set_ip(std::string ip);
-    int get_port();
-    void set_port(int port);
+    std::string get_ip() {
+        return m_ip;
+    }
+    void set_ip(std::string ip) {
+        m_ip = ip;
+    }
+    int get_port() {
+        return m_port;
+    }
+    void set_port(int port) {
+        m_port = port;
+    }
 
-    asio::io_context* get_io_context();
-    void set_io_context(asio::io_context* io_context);
-    asio::ip::tcp::socket* get_socket();
-    void set_socket(asio::ip::tcp::socket* socket);
+    asio::io_context* get_io_context() {
+        return m_io_context;
+    }
+    void set_io_context(asio::io_context* io_context){
+        m_io_context = io_context;
+    }
+    asio::ip::tcp::socket* get_socket() {
+        return m_socket;
+    }
+    void set_socket(asio::ip::tcp::socket* socket) {
+        m_socket = socket;
+    }
 
 private:
-    std::string ip = "127.0.0.1";
-    int port = 1234;
-    asio::io_context* io_context;
-    asio::ip::tcp::socket* socket;
+    std::string m_ip = "127.0.0.1";
+    int m_port = 1234;
+    asio::io_context* m_io_context;
+    asio::ip::tcp::socket* m_socket;
 };
 
 
