@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package jokinojo;
+
+
+message RequestData {
+  enum DataType {
+    CREATE_ROOM = 0;
+    JOIN_ROOM = 1;
+    QUIT = 2;
+    SYNC = 3;
+    VIDEO_NAME = 4;
+    READY = 5;
+    CHAT = 6;
+  }
+  DataType dataType = 1;
+  optional string username = 2;
+  optional int32 roomId = 3;
+  optional int32 timePosition = 4;
+  optional bool resumed = 5;
+  optional string videoName = 6;
+  optional string chatMessage = 7;
+  
+  
+}
+
+message ResponseData {
+  enum DataType {
+    CREATE_ROOM = 0;
+    JOIN_ROOM = 1;
+    USER_LEFT = 2;
+    SYNC = 3;
+    VIDEO_NAME = 4;
+    READY = 5;
+    CHAT = 6;
+  }
+  DataType dataType = 1;
+  optional int32 roomId = 2;
+  repeated string usernames = 3;
+  optional string username = 4;
+  optional int32 timePosition = 5;
+  optional bool resumed = 6;
+  optional string videoName = 7;
+  optional string chatMessage = 8;
+
+}
