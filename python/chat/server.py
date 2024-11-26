@@ -12,11 +12,11 @@ def handle_client(user: User):
         try:
             message = user.socket.recv(1024)
             if message:
-                print(f"Received from {user.username}: {message}")
+                print(f"Received from {user.user_name}: {message}")
                 response = handle_request(message)
                 user.socket.send(response.SerializeToString())
         except:
-            print(f"{user.username} disconnected.")
+            print(f"{user.user_name} disconnected.")
             users.remove(user)
             user.socket.close()
             break
@@ -26,12 +26,13 @@ def handle_request(raw_data):
     request.ParseFromString(raw_data)
 
     request_type = request.dataType
+    print(f"{request_type} received")
     if request_type == pb.RequestData.CREATE_ROOM:
         room = Room()
         rooms.append(room)
         print("Room created")
         response = pb.ResponseData()
-        response.type = pb.ResponseData.CREATE_ROOM
+        response.dataType = pb.ResponseData.CREATE_ROOM
         response.roomId = room.id
 
         return response

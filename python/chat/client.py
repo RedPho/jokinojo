@@ -11,6 +11,7 @@ def receive_messages(client_socket):
         try:
             data = client_socket.recv(1024)
             if data:
+                print("Response received")
                 handle_response(data)
         except:
             print("Disconnected from server.")
@@ -35,6 +36,7 @@ def send_messages(client_socket):
             request = network_pb2.RequestData()
             request.dataType = network_pb2.RequestData.CREATE_ROOM
             client_socket.send(request.SerializeToString())
+            print("Room create request sent")
 
 def connect_server(host, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
