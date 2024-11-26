@@ -13,7 +13,7 @@ private:
 public:
     void check_mpv_error(int status);
     bool initialize();
-    bool setMediaStatus(bool isPaused, int timePosition);
+    void setMediaStatus(bool isPaused, int timePosition);
     std::string getFileName();
 };
 
