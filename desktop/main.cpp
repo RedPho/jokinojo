@@ -9,15 +9,15 @@ public:
         wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
         // Initial setup
-        initialPanel = new wxPanel(this);
+        loginPanel = new wxPanel(this);
         chatPanel = new wxPanel(this);
         chatPanel->Hide();  // Initially hide the chat panel
 
         // Nickname input panel
-        nicknameLabel = new wxStaticText(initialPanel, wxID_ANY, "Enter Nickname:", wxPoint(20, 20));
-        nicknameInput = new wxTextCtrl(initialPanel, wxID_ANY, "", wxPoint(20, 50), wxSize(200, -1));
-        createButton = new wxButton(initialPanel, wxID_ANY, "Create Room", wxPoint(20, 90));
-        joinButton = new wxButton(initialPanel, wxID_ANY, "Join Room", wxPoint(20, 140));
+        nicknameLabel = new wxStaticText(loginPanel, wxID_ANY, "Enter Nickname:", wxPoint(20, 20));
+        nicknameInput = new wxTextCtrl(loginPanel, wxID_ANY, "", wxPoint(20, 50), wxSize(200, -1));
+        createButton = new wxButton(loginPanel, wxID_ANY, "Create Room", wxPoint(20, 90));
+        joinButton = new wxButton(loginPanel, wxID_ANY, "Join Room", wxPoint(20, 140));
 
         // Chat interface panel
         chatDisplay = new wxTextCtrl(chatPanel, wxID_ANY, "", wxPoint(20, 20), wxSize(350, 400), wxTE_MULTILINE | wxTE_READONLY);
@@ -25,7 +25,7 @@ public:
         sendButton = new wxButton(chatPanel, wxID_ANY, "Send", wxPoint(280, 430));
 
         // Add panels to main sizer
-        mainSizer->Add(initialPanel, 1, wxEXPAND);
+        mainSizer->Add(loginPanel, 1, wxEXPAND);
         mainSizer->Add(chatPanel, 1, wxEXPAND);
 
         // Set sizer for the frame
@@ -38,7 +38,7 @@ public:
     }
 
 private:
-    wxPanel* initialPanel;
+    wxPanel* loginPanel;
     wxPanel* chatPanel;
     wxStaticText* nicknameLabel;
     wxTextCtrl* nicknameInput;
@@ -57,7 +57,7 @@ private:
             return;
         }
 
-        initialPanel->Hide();
+        loginPanel->Hide();
         chatPanel->Show();
         Layout();
         chatDisplay->AppendText("Connected as " + nickname + "\n");
@@ -75,7 +75,7 @@ private:
         wxString roomId = wxGetTextFromUser(wxT("Enter Room ID:"), wxT("Room ID"));
         //networker.requestJoinRoom(wxAtoi(roomId), nickname.ToStdString());
         wxMessageBox("roomID: " + roomId, "bu olay yerine join network olayi gerceklesecek", wxOK | wxICON_ERROR);
-        initialPanel->Hide();
+        loginPanel->Hide();
         chatPanel->Show();
         Layout();
         chatDisplay->AppendText("Connected as " + nickname + "\n");
