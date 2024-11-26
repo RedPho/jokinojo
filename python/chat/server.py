@@ -42,7 +42,9 @@ def handle_request(raw_data):
 # Server setup
 def start_server(host='0.0.0.0', port=5000):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((host, port))
+
     server.listen()
     print(f"Server started on {host}:{port}")
 

@@ -35,7 +35,10 @@ def send_messages(client_socket):
         if choice == '1':
             request = network_pb2.RequestData()
             request.dataType = network_pb2.RequestData.CREATE_ROOM
-            client_socket.send(request.SerializeToString())
+            request_data = request.SerializeToString()
+            bytes = client_socket.send(request_data)
+            print(f"Serialized request data: {request_data}")
+            print(bytes)
             print("Room create request sent")
 
 def connect_server(host, port):
