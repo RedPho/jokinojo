@@ -1,0 +1,21 @@
+/home/emin/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/emin/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja -G Ninja -S /home/emin/Classes/semester5/INF303-Project/jokinojo/desktop -B /home/emin/Classes/semester5/INF303-Project/jokinojo/desktop/cmake-build-debug
+-- The C compiler identification is GNU 14.2.1
+-- The CXX compiler identification is GNU 14.2.1
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found Protobuf: /usr/lib/libprotobuf.so (found version "5.28.3") 
+-- Found wxWidgets: -lwx_gtk3u_core-3.2;-lwx_baseu-3.2 (found version "3.2.6") 
+-- Found PkgConfig: /usr/bin/pkg-config (found version "2.1.1") 
+-- Checking for module 'mpv'
+--   Found mpv, version 2.3.0
+-- Configuring done (2.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/emin/Classes/semester5/INF303-Project/jokinojo/desktop/cmake-build-debug
