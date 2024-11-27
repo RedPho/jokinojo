@@ -1,6 +1,0 @@
-# ninja log v5
-1	839	1732687002163776352	CMakeFiles/JoKinoJo.dir/MediaPlayer.cpp.o	8dd5aa2a7b4ed2ce
-1	5153	1732687006477217821	CMakeFiles/JoKinoJo.dir/network.pb.cc.o	837f0c6ae6ae2e1b
-0	7206	1732687008530602710	CMakeFiles/JoKinoJo.dir/main.cpp.o	b88db28a3830e304
-0	8619	1732687009940638142	CMakeFiles/JoKinoJo.dir/Networking.cpp.o	9a7d0e62545fdcc6
-8620	9767	1732687011084000223	JoKinoJo	94c14b14f2a335e9
