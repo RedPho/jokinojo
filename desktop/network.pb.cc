@@ -165,34 +165,34 @@ static const ::_pb::Message* const file_default_instances[] = {
 };
 const char descriptor_table_protodef_network_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
-    "\n\rnetwork.proto\022\010jokinojo\"\206\003\n\013RequestDat"
+    "\n\rnetwork.proto\022\010jokinojo\"\220\003\n\013RequestDat"
     "a\0220\n\010dataType\030\001 \001(\0162\036.jokinojo.RequestDa"
     "ta.DataType\022\025\n\010username\030\002 \001(\tH\000\210\001\001\022\023\n\006ro"
     "omId\030\003 \001(\005H\001\210\001\001\022\031\n\014timePosition\030\004 \001(\005H\002\210"
     "\001\001\022\024\n\007resumed\030\005 \001(\010H\003\210\001\001\022\026\n\tvideoName\030\006 "
-    "\001(\tH\004\210\001\001\022\030\n\013chatMessage\030\007 \001(\tH\005\210\001\001\"c\n\010Da"
-    "taType\022\017\n\013CREATE_ROOM\020\000\022\r\n\tJOIN_ROOM\020\001\022\010"
-    "\n\004QUIT\020\002\022\010\n\004SYNC\020\003\022\016\n\nVIDEO_NAME\020\004\022\t\n\005RE"
-    "ADY\020\005\022\010\n\004CHAT\020\006B\013\n\t_usernameB\t\n\007_roomIdB"
-    "\017\n\r_timePositionB\n\n\010_resumedB\014\n\n_videoNa"
-    "meB\016\n\014_chatMessage\"\240\003\n\014ResponseData\0221\n\010d"
-    "ataType\030\001 \001(\0162\037.jokinojo.ResponseData.Da"
-    "taType\022\023\n\006roomId\030\002 \001(\005H\000\210\001\001\022\021\n\tusernames"
-    "\030\003 \003(\t\022\025\n\010username\030\004 \001(\tH\001\210\001\001\022\031\n\014timePos"
-    "ition\030\005 \001(\005H\002\210\001\001\022\024\n\007resumed\030\006 \001(\010H\003\210\001\001\022\026"
-    "\n\tvideoName\030\007 \001(\tH\004\210\001\001\022\030\n\013chatMessage\030\010 "
-    "\001(\tH\005\210\001\001\"h\n\010DataType\022\017\n\013CREATE_ROOM\020\000\022\r\n"
-    "\tJOIN_ROOM\020\001\022\r\n\tUSER_LEFT\020\002\022\010\n\004SYNC\020\003\022\016\n"
-    "\nVIDEO_NAME\020\004\022\t\n\005READY\020\005\022\010\n\004CHAT\020\006B\t\n\007_r"
-    "oomIdB\013\n\t_usernameB\017\n\r_timePositionB\n\n\010_"
-    "resumedB\014\n\n_videoNameB\016\n\014_chatMessageb\006p"
-    "roto3"
+    "\001(\tH\004\210\001\001\022\030\n\013chatMessage\030\007 \001(\tH\005\210\001\001\"m\n\010Da"
+    "taType\022\010\n\004NULL\020\000\022\017\n\013CREATE_ROOM\020\001\022\r\n\tJOI"
+    "N_ROOM\020\002\022\010\n\004QUIT\020\003\022\010\n\004SYNC\020\004\022\016\n\nVIDEO_NA"
+    "ME\020\005\022\t\n\005READY\020\006\022\010\n\004CHAT\020\007B\013\n\t_usernameB\t"
+    "\n\007_roomIdB\017\n\r_timePositionB\n\n\010_resumedB\014"
+    "\n\n_videoNameB\016\n\014_chatMessage\"\252\003\n\014Respons"
+    "eData\0221\n\010dataType\030\001 \001(\0162\037.jokinojo.Respo"
+    "nseData.DataType\022\023\n\006roomId\030\002 \001(\005H\000\210\001\001\022\021\n"
+    "\tusernames\030\003 \003(\t\022\025\n\010username\030\004 \001(\tH\001\210\001\001\022"
+    "\031\n\014timePosition\030\005 \001(\005H\002\210\001\001\022\024\n\007resumed\030\006 "
+    "\001(\010H\003\210\001\001\022\026\n\tvideoName\030\007 \001(\tH\004\210\001\001\022\030\n\013chat"
+    "Message\030\010 \001(\tH\005\210\001\001\"r\n\010DataType\022\010\n\004NULL\020\000"
+    "\022\017\n\013CREATE_ROOM\020\001\022\r\n\tJOIN_ROOM\020\002\022\r\n\tUSER"
+    "_LEFT\020\003\022\010\n\004SYNC\020\004\022\016\n\nVIDEO_NAME\020\005\022\t\n\005REA"
+    "DY\020\006\022\010\n\004CHAT\020\007B\t\n\007_roomIdB\013\n\t_usernameB\017"
+    "\n\r_timePositionB\n\n\010_resumedB\014\n\n_videoNam"
+    "eB\016\n\014_chatMessageb\006proto3"
 };
 static ::absl::once_flag descriptor_table_network_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_network_2eproto = {
     false,
     false,
-    845,
+    865,
     descriptor_table_protodef_network_2eproto,
     "network.proto",
     &descriptor_table_network_2eproto_once,
@@ -211,13 +211,14 @@ const ::google::protobuf::EnumDescriptor* RequestData_DataType_descriptor() {
   return file_level_enum_descriptors_network_2eproto[0];
 }
 PROTOBUF_CONSTINIT const uint32_t RequestData_DataType_internal_data_[] = {
-    458752u, 0u, };
+    524288u, 0u, };
 bool RequestData_DataType_IsValid(int value) {
-  return 0 <= value && value <= 6;
+  return 0 <= value && value <= 7;
 }
 #if (__cplusplus < 201703) && \
   (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
+constexpr RequestData_DataType RequestData::NULL_;
 constexpr RequestData_DataType RequestData::CREATE_ROOM;
 constexpr RequestData_DataType RequestData::JOIN_ROOM;
 constexpr RequestData_DataType RequestData::QUIT;
@@ -236,13 +237,14 @@ const ::google::protobuf::EnumDescriptor* ResponseData_DataType_descriptor() {
   return file_level_enum_descriptors_network_2eproto[1];
 }
 PROTOBUF_CONSTINIT const uint32_t ResponseData_DataType_internal_data_[] = {
-    458752u, 0u, };
+    524288u, 0u, };
 bool ResponseData_DataType_IsValid(int value) {
-  return 0 <= value && value <= 6;
+  return 0 <= value && value <= 7;
 }
 #if (__cplusplus < 201703) && \
   (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
+constexpr ResponseData_DataType ResponseData::NULL_;
 constexpr ResponseData_DataType ResponseData::CREATE_ROOM;
 constexpr ResponseData_DataType ResponseData::JOIN_ROOM;
 constexpr ResponseData_DataType ResponseData::USER_LEFT;

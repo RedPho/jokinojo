@@ -65,13 +65,14 @@ namespace protobuf {
 
 namespace jokinojo {
 enum RequestData_DataType : int {
-  RequestData_DataType_CREATE_ROOM = 0,
-  RequestData_DataType_JOIN_ROOM = 1,
-  RequestData_DataType_QUIT = 2,
-  RequestData_DataType_SYNC = 3,
-  RequestData_DataType_VIDEO_NAME = 4,
-  RequestData_DataType_READY = 5,
-  RequestData_DataType_CHAT = 6,
+  RequestData_DataType_NULL_ = 0,
+  RequestData_DataType_CREATE_ROOM = 1,
+  RequestData_DataType_JOIN_ROOM = 2,
+  RequestData_DataType_QUIT = 3,
+  RequestData_DataType_SYNC = 4,
+  RequestData_DataType_VIDEO_NAME = 5,
+  RequestData_DataType_READY = 6,
+  RequestData_DataType_CHAT = 7,
   RequestData_DataType_RequestData_DataType_INT_MIN_SENTINEL_DO_NOT_USE_ =
       std::numeric_limits<::int32_t>::min(),
   RequestData_DataType_RequestData_DataType_INT_MAX_SENTINEL_DO_NOT_USE_ =
@@ -81,8 +82,8 @@ enum RequestData_DataType : int {
 bool RequestData_DataType_IsValid(int value);
 extern const uint32_t RequestData_DataType_internal_data_[];
 constexpr RequestData_DataType RequestData_DataType_DataType_MIN = static_cast<RequestData_DataType>(0);
-constexpr RequestData_DataType RequestData_DataType_DataType_MAX = static_cast<RequestData_DataType>(6);
-constexpr int RequestData_DataType_DataType_ARRAYSIZE = 6 + 1;
+constexpr RequestData_DataType RequestData_DataType_DataType_MAX = static_cast<RequestData_DataType>(7);
+constexpr int RequestData_DataType_DataType_ARRAYSIZE = 7 + 1;
 const ::google::protobuf::EnumDescriptor*
 RequestData_DataType_descriptor();
 template <typename T>
@@ -95,7 +96,7 @@ const std::string& RequestData_DataType_Name(T value) {
 template <>
 inline const std::string& RequestData_DataType_Name(RequestData_DataType value) {
   return ::google::protobuf::internal::NameOfDenseEnum<RequestData_DataType_descriptor,
-                                                 0, 6>(
+                                                 0, 7>(
       static_cast<int>(value));
 }
 inline bool RequestData_DataType_Parse(absl::string_view name, RequestData_DataType* value) {
@@ -103,13 +104,14 @@ inline bool RequestData_DataType_Parse(absl::string_view name, RequestData_DataT
       RequestData_DataType_descriptor(), name, value);
 }
 enum ResponseData_DataType : int {
-  ResponseData_DataType_CREATE_ROOM = 0,
-  ResponseData_DataType_JOIN_ROOM = 1,
-  ResponseData_DataType_USER_LEFT = 2,
-  ResponseData_DataType_SYNC = 3,
-  ResponseData_DataType_VIDEO_NAME = 4,
-  ResponseData_DataType_READY = 5,
-  ResponseData_DataType_CHAT = 6,
+  ResponseData_DataType_NULL_ = 0,
+  ResponseData_DataType_CREATE_ROOM = 1,
+  ResponseData_DataType_JOIN_ROOM = 2,
+  ResponseData_DataType_USER_LEFT = 3,
+  ResponseData_DataType_SYNC = 4,
+  ResponseData_DataType_VIDEO_NAME = 5,
+  ResponseData_DataType_READY = 6,
+  ResponseData_DataType_CHAT = 7,
   ResponseData_DataType_ResponseData_DataType_INT_MIN_SENTINEL_DO_NOT_USE_ =
       std::numeric_limits<::int32_t>::min(),
   ResponseData_DataType_ResponseData_DataType_INT_MAX_SENTINEL_DO_NOT_USE_ =
@@ -119,8 +121,8 @@ enum ResponseData_DataType : int {
 bool ResponseData_DataType_IsValid(int value);
 extern const uint32_t ResponseData_DataType_internal_data_[];
 constexpr ResponseData_DataType ResponseData_DataType_DataType_MIN = static_cast<ResponseData_DataType>(0);
-constexpr ResponseData_DataType ResponseData_DataType_DataType_MAX = static_cast<ResponseData_DataType>(6);
-constexpr int ResponseData_DataType_DataType_ARRAYSIZE = 6 + 1;
+constexpr ResponseData_DataType ResponseData_DataType_DataType_MAX = static_cast<ResponseData_DataType>(7);
+constexpr int ResponseData_DataType_DataType_ARRAYSIZE = 7 + 1;
 const ::google::protobuf::EnumDescriptor*
 ResponseData_DataType_descriptor();
 template <typename T>
@@ -133,7 +135,7 @@ const std::string& ResponseData_DataType_Name(T value) {
 template <>
 inline const std::string& ResponseData_DataType_Name(ResponseData_DataType value) {
   return ::google::protobuf::internal::NameOfDenseEnum<ResponseData_DataType_descriptor,
-                                                 0, 6>(
+                                                 0, 7>(
       static_cast<int>(value));
 }
 inline bool ResponseData_DataType_Parse(absl::string_view name, ResponseData_DataType* value) {
@@ -285,6 +287,7 @@ class ResponseData final : public ::google::protobuf::Message
   ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
   using DataType = ResponseData_DataType;
+  static constexpr DataType NULL_ = ResponseData_DataType_NULL_;
   static constexpr DataType CREATE_ROOM = ResponseData_DataType_CREATE_ROOM;
   static constexpr DataType JOIN_ROOM = ResponseData_DataType_JOIN_ROOM;
   static constexpr DataType USER_LEFT = ResponseData_DataType_USER_LEFT;
@@ -618,6 +621,7 @@ class RequestData final : public ::google::protobuf::Message
   ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
   using DataType = RequestData_DataType;
+  static constexpr DataType NULL_ = RequestData_DataType_NULL_;
   static constexpr DataType CREATE_ROOM = RequestData_DataType_CREATE_ROOM;
   static constexpr DataType JOIN_ROOM = RequestData_DataType_JOIN_ROOM;
   static constexpr DataType QUIT = RequestData_DataType_QUIT;
