@@ -7,6 +7,7 @@ class Room:
         self.room_id = Room._id_counter
         self.video_name = ""
         self.users = []
+        self.ready = False
         
     def add_user(self, user: User):
         if user not in self.users:
