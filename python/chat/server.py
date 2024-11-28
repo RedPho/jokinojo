@@ -11,15 +11,18 @@ def handle_client(user: User):
     while True:
         try:
             message = user.socket.recv(1024)
-            if message:
-                print(f"Received from {user.user_name}: {message}")
-                response = handle_request(message)
-                user.socket.send(response.SerializeToString())
-        except:
-            print(f"{user.user_name} disconnected.")
-            users.remove(user)
-            user.socket.close()
+            if not message:
+                print(f"{user.user_name} disconnected (empty message).")
+                break
+
+            print(f"Received from {user.user_name}: {message}")
+            response = handle_request(message)
+            user.socket.send(response.SerializeToString())
+        except Exception as e:
+            print(f"Error for {user.user_name}: {e}")
             break
+
+
 
 def handle_request(raw_data):
     request = pb.RequestData()
@@ -30,10 +33,10 @@ def handle_request(raw_data):
     if request_type == pb.RequestData.CREATE_ROOM:
         room = Room()
         rooms.append(room)
-        print("Room created")
+        print(f"Room created with id {room.room_id}")
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.CREATE_ROOM
-        response.roomId = room.id
+        response.roomId = room.room_id
 
         return response
 
@@ -63,3 +66,4 @@ def start_server(host='0.0.0.0', port=5000):
         thread.start()
 
 start_server()
+
