@@ -59,7 +59,7 @@ def join_room(request, user):
             room.add_user(user)
             if room.ready:
                 room.ready = False
-                pause_all_users(room)
+                #pause_all_users(room)
             #ready degiskeni dogruysa false yapip
             #tüm kullanicilara pause atsin
 
