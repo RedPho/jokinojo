@@ -41,6 +41,7 @@ def handle_response(raw_data):
 # Function to handle sending messages
 def send_messages(client_socket):
     while True:
+        global username
         choice = input("To create room write 1 to join 2: ")
         if choice == '1':
             request = network_pb2.RequestData()

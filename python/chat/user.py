@@ -3,8 +3,8 @@ class User:
     def __init__(self, username: str, client_socket):
         User._id_counter += 1
         self.user_id = User._id_counter
-        self.user_name = username
+        self.username = username
         self.socket = client_socket
 
     def __str__(self):
-        return f"User(ID: {self.user_id}, Name: {self.user_name})"
+        return f"User(ID: {self.user_id}, Name: {self.username})"
