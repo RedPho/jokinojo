@@ -8,7 +8,6 @@ users = []
 rooms = []
 
 def handle_client(user: User):
-
     while True:
         try:
             message = user.socket.recv(1024)
@@ -19,8 +18,11 @@ def handle_client(user: User):
             print(f"Received from {user.username}: {message}")
             response = handle_request(message, user)
             user.socket.send(response.SerializeToString())
+        except socket.error as e:
+            print(f"Socket error for {user.username}: {e}")
+            break
         except Exception as e:
-            print(f"Error for {user.username}: {e}")
+            print(f"Unexpected error for {user.username}: {e}")
             break
 
 
@@ -58,6 +60,8 @@ def join_room(request, user):
             is_room_exist = True
             if user not in room.users:
                 room.add_user(user)
+                send_new_userlist_to_current_users(room, user)
+
             if room.ready:
                 room.ready = False
                 #pause_all_users(room)
@@ -75,6 +79,22 @@ def join_room(request, user):
         response.dataType = pb.ResponseData.ERROR
         response.errorMessage = "This room doesnt exist"
         return response
+
+
+def send_new_userlist_to_current_users(room, user):
+    for current_user in room.users:
+        if current_user == user:  # Skip the newly joined user
+            continue
+        response = pb.ResponseData()
+        response.dataType = pb.ResponseData.JOIN_ROOM
+        response.usernames.extend([u.username for u in room.users])  # Corrected to user_name
+        response.videoName = room.video_name
+
+        try:
+            current_user.socket.send(response.SerializeToString())  # Send serialized data
+            print(f"New userlist sent to {current_user.username}")  # Corrected to user_name
+        except Exception as e:
+            print(f"Failed to send userlist to {current_user.username}: {e}")
 
 
 # Server setup
