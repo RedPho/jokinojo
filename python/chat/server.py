@@ -6,6 +6,7 @@ from room import Room
 
 users = []
 rooms = []
+rooms_lock = threading.Lock()
 
 def handle_client(user: User):
     while True:
@@ -44,7 +45,9 @@ def create_room(request, user):
     user.username = request.username
     room = Room()
     room.add_user(user)
-    rooms.append(room)
+    with rooms_lock:
+        ##rooms arrayini kitelyip ayni anda baska threadlerin erismesini engelledim
+        rooms.append(room)
     print(f"Room created with id {room.room_id}")
     response = pb.ResponseData()
     response.dataType = pb.ResponseData.CREATE_ROOM
@@ -55,18 +58,22 @@ def join_room(request, user):
     user.username = request.username
     room_id = request.roomId
     is_room_exist = False
-    for room in rooms:
-        if room.room_id == room_id:
-            is_room_exist = True
-            if user not in room.users:
-                room.add_user(user)
-                send_new_userlist_to_current_users(room, user)
+    with rooms_lock:
+        ##rooms arrayini kitelyip ayni anda baska threadlerin erismesini engelledim
+        for room in rooms:
+            if is_room_exist:
+                break
+            if room.room_id == room_id:
+                is_room_exist = True
+                if user not in room.users:
+                    room.add_user(user)
+                    send_new_userlist_to_current_users(room, user)
 
-            if room.ready:
-                room.ready = False
-                #pause_all_users(room)
-            #ready degiskeni dogruysa false yapip
-            #tüm kullanicilara pause atsin
+                if room.ready:
+                    room.ready = False
+                    #pause_all_users(room)
+                #ready degiskeni dogruysa false yapip
+                #tüm kullanicilara pause atsin
 
     if is_room_exist:
         response = pb.ResponseData()
