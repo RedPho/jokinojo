@@ -37,6 +37,9 @@ def handle_request(raw_data, user):
     elif request_type == pb.RequestData.JOIN_ROOM:
         response = join_room(request, user)
         return response
+    elif request_type == pb.RequestData.READY:
+        response = ready(request,user)
+        return response
 
 def create_room(request, user):
     user.user_name = request.username
@@ -74,6 +77,25 @@ def join_room(request, user):
         response.dataType = pb.ResponseData.ERROR
         response.errorMessage = "This room doesnt exist"
         return response
+
+def ready(request,user):
+    user.user_name = request.username
+    user.ready =  True
+    room_id = request.roomId
+    for room in rooms:
+       if room.roomId == room_id and room.ready:
+            response = pb.ResponseData.Ready()
+            response.usernames.extend([user.user_name for user in room.users])
+            response.ready = user.ready
+            return response 
+
+    # Eğer hiçbir oda eşleşmezse hata döndür
+    if response is None:
+        response = pb.ResponseData.ERROR()
+        response.errorMessage = "Room not found"
+
+    return response
+
 
 
 # Server setup
