@@ -6,6 +6,33 @@ class MainFrame : public wxFrame {
 public:
     bool isHost;
     MainFrame() : wxFrame(nullptr, wxID_ANY, "Chat Application", wxDefaultPosition, wxSize(400, 600)) {
+        networker.setDataCallback([this](jokinojo::ResponseData data) {
+            wxTheApp->CallAfter([this, data]() {
+                switch (data.datatype()){
+                    case jokinojo::ResponseData_DataType_CREATE_ROOM:
+                        wxMessageBox(wxString::Format(wxT("Room id is %i"),data.roomid()), "Incoming Data", wxOK | wxICON_INFORMATION, this);
+                        break;
+                    case jokinojo::ResponseData_DataType_JOIN_ROOM:
+                        break;
+                    case jokinojo::ResponseData_DataType_USER_LEFT:
+                        break;
+                    case jokinojo::ResponseData_DataType_SYNC:
+                        break;
+                    case jokinojo::ResponseData_DataType_VIDEO_NAME:
+                        break;
+                    case jokinojo::ResponseData_DataType_READY:
+                        break;
+                    case jokinojo::ResponseData_DataType_CHAT:
+                        break;
+                    case jokinojo::ResponseData_DataType_NULL_:
+                        break;
+                    default:
+                        wxMessageBox("i don't know this data", "Incoming Data", wxOK | wxICON_INFORMATION, this);
+                }
+
+
+            });
+        });
         networker.initialize("0.0.0.0", 5000);
         std::thread networkIncomingHandlerThread(&Networker::handleIncomingData, &networker);
         networkIncomingHandlerThread.detach();
@@ -40,6 +67,7 @@ public:
         createButton->Bind(wxEVT_BUTTON, &MainFrame::OnCreate, this);
         joinButton->Bind(wxEVT_BUTTON, &MainFrame::OnJoin, this);
         sendButton->Bind(wxEVT_BUTTON, &MainFrame::OnSendMessage, this);
+
     }
 
 private:

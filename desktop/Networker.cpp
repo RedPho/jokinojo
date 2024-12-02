@@ -49,9 +49,15 @@ bool Networker::handleIncomingData(){
     }
     while (true) {
         try{
-            std::cout << "trying" << "\n";
+            std::cout << "trying to read" << "\n";
             std::size_t bytesRead = m_socket.read_some(asio::buffer(data, sizeof(data)));
-            std::cout << bytesRead << "bytes: " << data << "\n";
+            std::string receivedData(data, bytesRead);
+            std::cout << bytesRead << "bytes and the data: " << receivedData << "\n";
+            jokinojo::ResponseData responseData;
+            responseData.ParseFromString(receivedData);
+            if (m_dataCallback) {
+                m_dataCallback(responseData);
+            }
         } catch  (std::exception& e) {
             std::cerr << "Connection lost: " << e.what() << "\n";
         }

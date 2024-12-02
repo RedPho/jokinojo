@@ -7,9 +7,14 @@
 
 #include <string>
 #include <asio.hpp>
+#include <network.pb.h>
 
 class Networker {
 public:
+    void setDataCallback(std::function<void(jokinojo::ResponseData)> callback) {
+        m_dataCallback = callback;
+    }
+
     static Networker& get_instance();
 
     bool initialize(std::string ip, int port);
@@ -27,6 +32,8 @@ public:
 private:
     asio::io_context m_io_context;
     asio::ip::tcp::socket m_socket;
+    std::function<void(jokinojo::ResponseData)> m_dataCallback;
+
     Networker() : m_socket(m_io_context) {}
     ~Networker() = default;
 
