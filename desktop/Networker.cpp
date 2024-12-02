@@ -2,37 +2,31 @@
 // Created by emin on 31.10.2024.
 //
 
-#include "Networking.hh"
+#include "Networker.hh"
 #include <asio.hpp>
 #include <iostream>
 #include <thread>
 #include <network.pb.h>
 using asio::ip::tcp;
 
-Networking& Networking::get_instance(){
-    static Networking n;
+Networker& Networker::get_instance(){
+    static Networker n;
     return n;
 }
 
-bool Networking::initialize() {
-    Networking& networker = get_instance(); // Assuming get_instance() returns a reference
+bool Networker::initialize(std::string ip, int port) {
+    Networker& networker = get_instance(); // Assuming get_instance() returns a reference
 
     // Create and store io_context and socket locally (or manage via member variables)
-    asio::io_context asio_io_context;
-    tcp::socket socket(asio_io_context);
-
-    // Set the io_context and socket in the Networking instance
-    networker.set_io_context(&asio_io_context);
-    networker.set_socket(&socket);
 
     while (true) {
         try {
-            tcp::resolver resolver(asio_io_context);
+            tcp::resolver resolver(m_io_context);
             // Resolve the server's IP address and port
-            tcp::resolver::results_type endpoints = resolver.resolve(m_ip, std::to_string(m_port));
+            tcp::resolver::results_type endpoints = resolver.resolve(ip, std::to_string(port));
 
             // Perform synchronous connection
-            asio::connect(socket, endpoints);
+            asio::connect(m_socket, endpoints);
 
             std::cout << "Connected to server\n";
             return true;
@@ -46,8 +40,25 @@ bool Networking::initialize() {
     return false;
 }
 
+bool Networker::handleIncomingData(){
+    std::cout << "handlingIncomingData" << "\n";
+    char data[1024];
+    if (!m_socket.is_open()) {
+        std::cerr << "Socket is not open.\n";
+        return false;
+    }
+    while (true) {
+        try{
+            std::cout << "trying" << "\n";
+            std::size_t bytesRead = m_socket.read_some(asio::buffer(data, sizeof(data)));
+            std::cout << bytesRead << "bytes: " << data << "\n";
+        } catch  (std::exception& e) {
+            std::cerr << "Connection lost: " << e.what() << "\n";
+        }
+    }
+}
 
-bool Networking::requestJoinRoom(int roomId, std::string username) {
+bool Networker::requestJoinRoom(int roomId, std::string username) {
     jokinojo::RequestData networkData;
     std::error_code error;
 
@@ -65,14 +76,14 @@ bool Networking::requestJoinRoom(int roomId, std::string username) {
 
     // Send the size of the serialized data first (optional, helps receiver know the size)
     uint32_t size = htonl(serializedData.size());
-    asio::write(*m_socket, asio::buffer(&size, sizeof(size)), error);
+    asio::write(m_socket, asio::buffer(&size, sizeof(size)), error);
     if (error) {
         std::cerr << "Failed to send data size: " << error.message() << "\n";
         return false;
     }
 
     // Send the serialized data
-    asio::write(*m_socket, asio::buffer(serializedData), error);
+    asio::write(m_socket, asio::buffer(serializedData), error);
     if (error) {
         std::cerr << "Failed to send serialized data: " << error.message() << "\n";
         return false;
@@ -83,12 +94,24 @@ bool Networking::requestJoinRoom(int roomId, std::string username) {
 
 
 
-bool Networking::requestCreateRoom(std::string username) {
+bool Networker::requestCreateRoom(std::string username) {
     jokinojo::RequestData networkData;
     std::error_code error;
     networkData.set_datatype(jokinojo::RequestData_DataType_CREATE_ROOM);
     networkData.set_username(username);
-    asio::write(*m_socket, asio::buffer(&networkData, sizeof(networkData)), error);
+
+    std::string serializedData;
+    if (!networkData.SerializeToString(&serializedData)) {
+        std::cerr << "Failed to serialize data." << std::endl;
+        return false;
+    }
+
+    asio::write(m_socket, asio::buffer(serializedData), error);
+
+    if (error) {
+        std::cerr << "Failed to send data: " << error.message() << std::endl;
+        return false;
+    }
     return true;
 }
 

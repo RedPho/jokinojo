@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 project(JoKinoJo)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 
@@ -15,8 +15,8 @@ include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/libraries/asio/inclu
 
 add_executable(JoKinoJo
         main.cpp
-        Networking.cpp
-        Networking.hh
+        Networker.cpp
+        Networker.hh
         MediaPlayer.cpp
         MediaPlayer.hh
         network.pb.cc

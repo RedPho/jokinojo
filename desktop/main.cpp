@@ -1,10 +1,15 @@
 #include <wx/wx.h>
-#include "Networking.hh"
+#include "Networker.hh"
 
 
 class MainFrame : public wxFrame {
 public:
+    bool isHost;
     MainFrame() : wxFrame(nullptr, wxID_ANY, "Chat Application", wxDefaultPosition, wxSize(400, 600)) {
+        networker.initialize("0.0.0.0", 5000);
+        std::thread networkIncomingHandlerThread(&Networker::handleIncomingData, &networker);
+        networkIncomingHandlerThread.detach();
+
         // Create main sizer for the frame
         wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -47,20 +52,21 @@ private:
     wxTextCtrl* chatDisplay;
     wxTextCtrl* chatInput;
     wxButton* sendButton;
-    Networking networker = Networking::get_instance();
+    Networker& networker = Networker::get_instance();
 
     void OnCreate(wxCommandEvent& event) {
-        wxString nickname = nicknameInput->GetValue();
+        wxString username = nicknameInput->GetValue();
 
-        if (nickname.IsEmpty()) {
-            wxMessageBox("Please enter a nickname", "Error", wxOK | wxICON_ERROR);
+        if (username.IsEmpty()) {
+            wxMessageBox("Please enter a username", "Error", wxOK | wxICON_ERROR);
             return;
         }
+        networker.requestCreateRoom(username.ToStdString());
 
         loginPanel->Hide();
         chatPanel->Show();
         Layout();
-        chatDisplay->AppendText("Connected as " + nickname + "\n");
+        chatDisplay->AppendText("Connected as " + username + "\n");
     }
 
     void OnSendMessage(wxCommandEvent& event) {
