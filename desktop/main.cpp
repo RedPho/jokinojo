@@ -11,6 +11,7 @@ public:
                 switch (data.datatype()){
                     case jokinojo::ResponseData_DataType_CREATE_ROOM:
                         wxMessageBox(wxString::Format(wxT("Room id is %i"),data.roomid()), "Incoming Data", wxOK | wxICON_INFORMATION, this);
+                        isHost = true;
                         break;
                     case jokinojo::ResponseData_DataType_JOIN_ROOM:
                         break;
@@ -19,8 +20,10 @@ public:
                     case jokinojo::ResponseData_DataType_SYNC:
                         break;
                     case jokinojo::ResponseData_DataType_VIDEO_NAME:
+                        wxMessageBox(wxString::Format(wxT("Video name is: %s."),data.videoname()), "Incoming Data", wxOK | wxICON_INFORMATION, this);
                         break;
                     case jokinojo::ResponseData_DataType_READY:
+                        wxMessageBox("Everyone is ready", "Incoming Data", wxOK | wxICON_INFORMATION, this);
                         break;
                     case jokinojo::ResponseData_DataType_CHAT:
                         break;
