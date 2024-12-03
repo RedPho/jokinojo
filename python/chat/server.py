@@ -1,5 +1,8 @@
 import socket
 import threading
+import logging
+
+
 import network_pb2 as pb
 from user import User
 from room import Room
@@ -7,6 +10,8 @@ from room import Room
 users = []
 rooms = []
 rooms_lock = threading.Lock()
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def handle_client(user: User):
     while True:
@@ -18,7 +23,15 @@ def handle_client(user: User):
 
             print(f"Received from {user.username}: {message}")
             response = handle_request(message, user)
-            user.socket.send(response.SerializeToString())
+            logging.info(f"received response with {response}")
+            if response.dataType == pb.ResponseData.QUIT:
+                logging.info("quit condition girildi")
+                user.socket.close()
+                break
+            else:
+                logging.info("response condition girildi")
+                user.socket.send(response.SerializeToString())
+
         except socket.error as e:
             print(f"Socket error for {user.username}: {e}")
             break
@@ -40,6 +53,10 @@ def handle_request(raw_data, user):
     elif request_type == pb.RequestData.JOIN_ROOM:
         response = join_room(request, user)
         return response
+    elif request_type == pb.RequestData.QUIT:
+        response = quit_request(request, user)
+        return response
+
 
 def create_room(request, user):
     user.username = request.username
@@ -64,10 +81,12 @@ def join_room(request, user):
             if is_room_exist:
                 break
             if room.room_id == room_id:
+                logging.info(f"Room with id{room_id} found")
                 is_room_exist = True
                 if user not in room.users:
                     room.add_user(user)
-                    send_new_userlist_to_current_users(room, user)
+                    logging.info(f"user {user.username} has added to the room")
+                    send_new_userlist_to_current_users(room, user, pb.ResponseData.JOIN_ROOM)
 
                 if room.ready:
                     room.ready = False
@@ -80,20 +99,21 @@ def join_room(request, user):
         response.dataType = pb.ResponseData.JOIN_ROOM
         response.usernames.extend([user.username for user in room.users])
         response.videoName = room.video_name
+        logging.info(f"response olusturuldu")
         return response
     else:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.ERROR
         response.errorMessage = "This room doesnt exist"
+        logging.info("hata responsu olusturldu")
         return response
 
-
-def send_new_userlist_to_current_users(room, user):
+def send_new_userlist_to_current_users(room, user, flag):
     for current_user in room.users:
         if current_user == user:  # Skip the newly joined user
             continue
         response = pb.ResponseData()
-        response.dataType = pb.ResponseData.JOIN_ROOM
+        response.dataType = flag
         response.usernames.extend([u.username for u in room.users])  # Corrected to user_name
         response.videoName = room.video_name
 
@@ -102,6 +122,27 @@ def send_new_userlist_to_current_users(room, user):
             print(f"New userlist sent to {current_user.username}")  # Corrected to user_name
         except Exception as e:
             print(f"Failed to send userlist to {current_user.username}: {e}")
+
+def quit_request(request, user):
+    logging.info(f"Quit request received from user: {user.username}")
+    room_id = request.roomId
+    logging.info(f"Room ID from request: {room_id}")
+
+    with rooms_lock:
+        for room in rooms:
+            if room.room_id == room_id:
+                logging.info(f"Room found: {room_id}")
+                send_new_userlist_to_current_users(room, user, pb.ResponseData.QUIT)
+                if user in room.users:
+                    room.remove_user(user)
+                if user in users:
+                    users.remove(user)
+                logging.info(f"User {user.username} removed from room {room_id} ")
+        logging.warning(f"Room with ID {room_id} not found")
+
+    response = pb.ResponseData()
+    response.dataType = pb.ResponseData.QUIT
+    return response
 
 
 # Server setup

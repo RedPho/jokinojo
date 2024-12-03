@@ -34,6 +34,11 @@ def handle_response(raw_data):
         room.video_name = response.videoName
         print(f"You joined the room with users {room.users}")
         print(f"Current video name: {room.video_name}")
+    elif response_type == network_pb2.ResponseData.QUIT:
+        room.users = list(response.usernames)
+        room.video_name = response.videoName
+        print(f"Someone left the room{room.users}")
+        print(f"Current video name: {room.video_name}")
 
 
 
@@ -41,7 +46,7 @@ def handle_response(raw_data):
 # Function to handle sending messages
 def send_messages(client_socket, username):
     while True:
-        choice = input("To create room write 1 to join 2: ")
+        choice = input("To create room write 1 to join 2 to leave room 3: ")
         if choice == '1':
             request = network_pb2.RequestData()
             request.dataType = network_pb2.RequestData.CREATE_ROOM
@@ -61,6 +66,14 @@ def send_messages(client_socket, username):
             client_socket.send(request.SerializeToString())
             print("Room join request sent")
             time.sleep(1)
+        elif choice == '3':
+            if room.users: ##odada olup olmadığımı kontrol etmek için odadaki kullanıcı sayısına bakıyorum
+                request = network_pb2.RequestData()
+                request.dataType = network_pb2.RequestData.QUIT
+                request.roomId = room.room_id
+                client_socket.send(request.SerializeToString())
+                print(f"Room leave request sent for room with id: {room.room_id}")
+                time.sleep(1)
 
 def connect_server(host, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

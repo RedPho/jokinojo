@@ -18,5 +18,7 @@ class Room:
     def remove_user(self, user: User):
         if user in self.users:
             self.users.remove(user)
+            return True
         else:
-            print(f"User {user.username} is not in the room.") 
+            print(f"User {user.username} is not in the room.")
+            return False
