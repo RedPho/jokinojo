@@ -109,6 +109,8 @@ def connect_server(host, port):
         exit(1)
 
 # Client setup
+server_ip = "4.182.87.239"
+
 def start_client(host='127.0.0.1', port=5000):
     client_socket = connect_server(host, port)
 

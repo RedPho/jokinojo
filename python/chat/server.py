@@ -128,7 +128,11 @@ def user_left(request, user):
             if room.room_id == room_id:
                 if user in room.users:
                     room.remove_user(user)
-                    send_new_userlist_to_current_users(room, user, pb.ResponseData.USER_LEFT)
+                    if len(room.users) == 0:##odada kimse yoksa odayı sil
+                        rooms.remove(room)
+                        logging.info(f"Room with id:{room_id} has removed")
+                    else:
+                        send_new_userlist_to_current_users(room, user, pb.ResponseData.USER_LEFT)
                 if user in users:
                     users.remove(user)
                 logging.info(f"{user.username} removed from room {room_id}.")
