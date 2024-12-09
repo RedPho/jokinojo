@@ -20,7 +20,7 @@ bool MediaPlayer::initialize() {
 
     // Enable default key bindings
     check_mpv_error(mpv_set_option_string(mpv, "input-default-bindings", "yes"));
-    mpv_set_option_string(mpv, "input-vo-keyboard", "yes");
+    check_mpv_error(mpv_set_option_string(mpv, "input-vo-keyboard", "yes"));
     int val = 1;
     check_mpv_error(mpv_set_option(mpv, "osc", MPV_FORMAT_FLAG, &val));
     check_mpv_error(mpv_initialize(mpv));
@@ -34,4 +34,27 @@ bool MediaPlayer::initialize() {
 void MediaPlayer::setMediaStatus(bool isPaused, int timePosition) {
     check_mpv_error(mpv_set_property(mpv, "pause", MPV_FORMAT_FLAG, (void *) &(isPaused)));
     check_mpv_error(mpv_set_property(mpv, "time-pos", MPV_FORMAT_DOUBLE, &(timePosition)));
+}
+
+std::string MediaPlayer::getFileName() {
+    std::string filename{};
+    check_mpv_error(mpv_get_property(mpv, "filename/no-ext", MPV_FORMAT_STRING, &filename));
+    return filename;
+}
+
+int MediaPlayer::getTimePosition() {
+    int timePosition{};
+    check_mpv_error(mpv_get_property(mpv, "time-pos", MPV_FORMAT_DOUBLE, &(timePosition)));
+    return timePosition;
+}
+
+bool MediaPlayer::getIsPaused() {
+    bool isPaused{};
+    mpv_get_property(mpv, "pause", MPV_FORMAT_FLAG, &isPaused);
+    if (isPaused == 0) {
+        m_paused = false;
+    } else if (isPaused == 1) {
+        m_paused = true;
+    }
+    return m_paused;
 }
