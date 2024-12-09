@@ -5,6 +5,7 @@ class User:
         self.user_id = User._id_counter
         self.username = username
         self.socket = client_socket
+        self.ready = False
 
     def __str__(self):
         return f"User(ID: {self.user_id}, Name: {self.username})"
