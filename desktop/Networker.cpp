@@ -15,9 +15,7 @@ Networker& Networker::get_instance(){
 }
 
 bool Networker::initialize(std::string ip, int port) {
-    Networker& networker = get_instance(); // Assuming get_instance() returns a reference
-
-    // Create and store io_context and socket locally (or manage via member variables)
+    Networker& networker = get_instance();
 
     while (true) {
         try {
@@ -80,13 +78,6 @@ bool Networker::requestJoinRoom(int roomId, std::string username) {
         return false;
     }
 
-    // Send the size of the serialized data first (optional, helps receiver know the size)
-    uint32_t size = htonl(serializedData.size());
-    asio::write(m_socket, asio::buffer(&size, sizeof(size)), error);
-    if (error) {
-        std::cerr << "Failed to send data size: " << error.message() << "\n";
-        return false;
-    }
 
     // Send the serialized data
     asio::write(m_socket, asio::buffer(serializedData), error);
