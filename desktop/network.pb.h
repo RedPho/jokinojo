@@ -112,6 +112,7 @@ enum ResponseData_DataType : int {
   ResponseData_DataType_VIDEO_NAME = 5,
   ResponseData_DataType_READY = 6,
   ResponseData_DataType_CHAT = 7,
+  ResponseData_DataType_ERROR = 8,
   ResponseData_DataType_ResponseData_DataType_INT_MIN_SENTINEL_DO_NOT_USE_ =
       std::numeric_limits<::int32_t>::min(),
   ResponseData_DataType_ResponseData_DataType_INT_MAX_SENTINEL_DO_NOT_USE_ =
@@ -121,8 +122,8 @@ enum ResponseData_DataType : int {
 bool ResponseData_DataType_IsValid(int value);
 extern const uint32_t ResponseData_DataType_internal_data_[];
 constexpr ResponseData_DataType ResponseData_DataType_DataType_MIN = static_cast<ResponseData_DataType>(0);
-constexpr ResponseData_DataType ResponseData_DataType_DataType_MAX = static_cast<ResponseData_DataType>(7);
-constexpr int ResponseData_DataType_DataType_ARRAYSIZE = 7 + 1;
+constexpr ResponseData_DataType ResponseData_DataType_DataType_MAX = static_cast<ResponseData_DataType>(8);
+constexpr int ResponseData_DataType_DataType_ARRAYSIZE = 8 + 1;
 const ::google::protobuf::EnumDescriptor*
 ResponseData_DataType_descriptor();
 template <typename T>
@@ -135,7 +136,7 @@ const std::string& ResponseData_DataType_Name(T value) {
 template <>
 inline const std::string& ResponseData_DataType_Name(ResponseData_DataType value) {
   return ::google::protobuf::internal::NameOfDenseEnum<ResponseData_DataType_descriptor,
-                                                 0, 7>(
+                                                 0, 8>(
       static_cast<int>(value));
 }
 inline bool ResponseData_DataType_Parse(absl::string_view name, ResponseData_DataType* value) {
@@ -295,6 +296,7 @@ class ResponseData final : public ::google::protobuf::Message
   static constexpr DataType VIDEO_NAME = ResponseData_DataType_VIDEO_NAME;
   static constexpr DataType READY = ResponseData_DataType_READY;
   static constexpr DataType CHAT = ResponseData_DataType_CHAT;
+  static constexpr DataType ERROR = ResponseData_DataType_ERROR;
   static inline bool DataType_IsValid(int value) {
     return ResponseData_DataType_IsValid(value);
   }
@@ -318,6 +320,7 @@ class ResponseData final : public ::google::protobuf::Message
     kUsernameFieldNumber = 4,
     kVideoNameFieldNumber = 7,
     kChatMessageFieldNumber = 8,
+    kErrorMessageFieldNumber = 9,
     kDataTypeFieldNumber = 1,
     kRoomIdFieldNumber = 2,
     kTimePositionFieldNumber = 5,
@@ -396,6 +399,23 @@ class ResponseData final : public ::google::protobuf::Message
   std::string* _internal_mutable_chatmessage();
 
   public:
+  // optional string errorMessage = 9;
+  bool has_errormessage() const;
+  void clear_errormessage() ;
+  const std::string& errormessage() const;
+  template <typename Arg_ = const std::string&, typename... Args_>
+  void set_errormessage(Arg_&& arg, Args_... args);
+  std::string* mutable_errormessage();
+  PROTOBUF_NODISCARD std::string* release_errormessage();
+  void set_allocated_errormessage(std::string* value);
+
+  private:
+  const std::string& _internal_errormessage() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_errormessage(
+      const std::string& value);
+  std::string* _internal_mutable_errormessage();
+
+  public:
   // .jokinojo.ResponseData.DataType dataType = 1;
   void clear_datatype() ;
   ::jokinojo::ResponseData_DataType datatype() const;
@@ -444,8 +464,8 @@ class ResponseData final : public ::google::protobuf::Message
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<
-      3, 8, 0,
-      75, 2>
+      4, 9, 0,
+      87, 2>
       _table_;
 
   static constexpr const void* _raw_default_instance_ =
@@ -471,6 +491,7 @@ class ResponseData final : public ::google::protobuf::Message
     ::google::protobuf::internal::ArenaStringPtr username_;
     ::google::protobuf::internal::ArenaStringPtr videoname_;
     ::google::protobuf::internal::ArenaStringPtr chatmessage_;
+    ::google::protobuf::internal::ArenaStringPtr errormessage_;
     int datatype_;
     ::int32_t roomid_;
     ::int32_t timeposition_;
@@ -1154,13 +1175,13 @@ inline void ResponseData::_internal_set_datatype(::jokinojo::ResponseData_DataTy
 
 // optional int32 roomId = 2;
 inline bool ResponseData::has_roomid() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000008u) != 0;
+  bool value = (_impl_._has_bits_[0] & 0x00000010u) != 0;
   return value;
 }
 inline void ResponseData::clear_roomid() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.roomid_ = 0;
-  _impl_._has_bits_[0] &= ~0x00000008u;
+  _impl_._has_bits_[0] &= ~0x00000010u;
 }
 inline ::int32_t ResponseData::roomid() const {
   // @@protoc_insertion_point(field_get:jokinojo.ResponseData.roomId)
@@ -1168,7 +1189,7 @@ inline ::int32_t ResponseData::roomid() const {
 }
 inline void ResponseData::set_roomid(::int32_t value) {
   _internal_set_roomid(value);
-  _impl_._has_bits_[0] |= 0x00000008u;
+  _impl_._has_bits_[0] |= 0x00000010u;
   // @@protoc_insertion_point(field_set:jokinojo.ResponseData.roomId)
 }
 inline ::int32_t ResponseData::_internal_roomid() const {
@@ -1317,13 +1338,13 @@ inline void ResponseData::set_allocated_username(std::string* value) {
 
 // optional int32 timePosition = 5;
 inline bool ResponseData::has_timeposition() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000010u) != 0;
+  bool value = (_impl_._has_bits_[0] & 0x00000020u) != 0;
   return value;
 }
 inline void ResponseData::clear_timeposition() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.timeposition_ = 0;
-  _impl_._has_bits_[0] &= ~0x00000010u;
+  _impl_._has_bits_[0] &= ~0x00000020u;
 }
 inline ::int32_t ResponseData::timeposition() const {
   // @@protoc_insertion_point(field_get:jokinojo.ResponseData.timePosition)
@@ -1331,7 +1352,7 @@ inline ::int32_t ResponseData::timeposition() const {
 }
 inline void ResponseData::set_timeposition(::int32_t value) {
   _internal_set_timeposition(value);
-  _impl_._has_bits_[0] |= 0x00000010u;
+  _impl_._has_bits_[0] |= 0x00000020u;
   // @@protoc_insertion_point(field_set:jokinojo.ResponseData.timePosition)
 }
 inline ::int32_t ResponseData::_internal_timeposition() const {
@@ -1345,13 +1366,13 @@ inline void ResponseData::_internal_set_timeposition(::int32_t value) {
 
 // optional bool resumed = 6;
 inline bool ResponseData::has_resumed() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000020u) != 0;
+  bool value = (_impl_._has_bits_[0] & 0x00000040u) != 0;
   return value;
 }
 inline void ResponseData::clear_resumed() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.resumed_ = false;
-  _impl_._has_bits_[0] &= ~0x00000020u;
+  _impl_._has_bits_[0] &= ~0x00000040u;
 }
 inline bool ResponseData::resumed() const {
   // @@protoc_insertion_point(field_get:jokinojo.ResponseData.resumed)
@@ -1359,7 +1380,7 @@ inline bool ResponseData::resumed() const {
 }
 inline void ResponseData::set_resumed(bool value) {
   _internal_set_resumed(value);
-  _impl_._has_bits_[0] |= 0x00000020u;
+  _impl_._has_bits_[0] |= 0x00000040u;
   // @@protoc_insertion_point(field_set:jokinojo.ResponseData.resumed)
 }
 inline bool ResponseData::_internal_resumed() const {
@@ -1511,6 +1532,77 @@ inline void ResponseData::set_allocated_chatmessage(std::string* value) {
         }
   #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:jokinojo.ResponseData.chatMessage)
+}
+
+// optional string errorMessage = 9;
+inline bool ResponseData::has_errormessage() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000008u) != 0;
+  return value;
+}
+inline void ResponseData::clear_errormessage() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.errormessage_.ClearToEmpty();
+  _impl_._has_bits_[0] &= ~0x00000008u;
+}
+inline const std::string& ResponseData::errormessage() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:jokinojo.ResponseData.errorMessage)
+  return _internal_errormessage();
+}
+template <typename Arg_, typename... Args_>
+inline PROTOBUF_ALWAYS_INLINE void ResponseData::set_errormessage(Arg_&& arg,
+                                                     Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_._has_bits_[0] |= 0x00000008u;
+  _impl_.errormessage_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:jokinojo.ResponseData.errorMessage)
+}
+inline std::string* ResponseData::mutable_errormessage() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  std::string* _s = _internal_mutable_errormessage();
+  // @@protoc_insertion_point(field_mutable:jokinojo.ResponseData.errorMessage)
+  return _s;
+}
+inline const std::string& ResponseData::_internal_errormessage() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.errormessage_.Get();
+}
+inline void ResponseData::_internal_set_errormessage(const std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_._has_bits_[0] |= 0x00000008u;
+  _impl_.errormessage_.Set(value, GetArena());
+}
+inline std::string* ResponseData::_internal_mutable_errormessage() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_._has_bits_[0] |= 0x00000008u;
+  return _impl_.errormessage_.Mutable( GetArena());
+}
+inline std::string* ResponseData::release_errormessage() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:jokinojo.ResponseData.errorMessage)
+  if ((_impl_._has_bits_[0] & 0x00000008u) == 0) {
+    return nullptr;
+  }
+  _impl_._has_bits_[0] &= ~0x00000008u;
+  auto* released = _impl_.errormessage_.Release();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.errormessage_.Set("", GetArena());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  return released;
+}
+inline void ResponseData::set_allocated_errormessage(std::string* value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (value != nullptr) {
+    _impl_._has_bits_[0] |= 0x00000008u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000008u;
+  }
+  _impl_.errormessage_.SetAllocated(value, GetArena());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        if (_impl_.errormessage_.IsDefault()) {
+          _impl_.errormessage_.Set("", GetArena());
+        }
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:jokinojo.ResponseData.errorMessage)
 }
 
 #ifdef __GNUC__

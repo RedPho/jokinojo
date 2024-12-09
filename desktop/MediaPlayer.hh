@@ -9,9 +9,9 @@
 
 class MediaPlayer {
 private:
-    mpv_handle *mpv;
-    int m_paused;
-    bool m_isHost;
+    mpv_handle *mpv = mpv_create();
+    int m_paused{};
+    bool m_isHost{};
 public:
     void setIsHost(bool h) {
         m_isHost = h;
@@ -22,6 +22,10 @@ public:
     void check_mpv_error(int status);
     bool initialize();
     void setMediaStatus(bool isPaused, int timePosition);
+    void setMpvHandle(mpv_handle* mpvHandle) {
+        mpv = mpvHandle;
+    }
+
     bool getIsPaused();
     int getTimePosition();
     std::string getFileName();

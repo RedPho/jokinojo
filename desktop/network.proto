@@ -35,6 +35,7 @@ message ResponseData {
     VIDEO_NAME = 5;
     READY = 6;
     CHAT = 7;
+    ERROR = 8;
   }
   DataType dataType = 1;
   optional int32 roomId = 2;
@@ -44,5 +45,6 @@ message ResponseData {
   optional bool resumed = 6;
   optional string videoName = 7;
   optional string chatMessage = 8;
+  optional string errorMessage = 9;
 
 }

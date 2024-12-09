@@ -12,7 +12,6 @@ void MediaPlayer::check_mpv_error(int status) {
 }
 
 bool MediaPlayer::initialize() {
-    mpv = mpv_create();
     if (!mpv) {
         std::cout << "failed creating context\n";
         return false;

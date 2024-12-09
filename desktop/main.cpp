@@ -1,10 +1,11 @@
 #include <wx/wx.h>
 #include "Networker.hh"
+#include "MediaPlayer.hh"
 
 
 class MainFrame : public wxFrame {
 public:
-    bool isHost;
+    bool isHost{false};
     MainFrame() : wxFrame(nullptr, wxID_ANY, "Chat Application", wxDefaultPosition, wxSize(400, 600)) {
         networker.setDataCallback([this](jokinojo::ResponseData data) {
             wxTheApp->CallAfter([this, data]() {
@@ -14,31 +15,46 @@ public:
                         isHost = true;
                         break;
                     case jokinojo::ResponseData_DataType_JOIN_ROOM:
+                        isHost = false;
+                        chatDisplay->AppendText("Connected\n");
+                        chatDisplay->AppendText("Users in room:\n");
+                        for (const std::string& username: data.usernames()) {
+                            chatDisplay->AppendText(username + "\n");
+                        }
                         break;
                     case jokinojo::ResponseData_DataType_USER_LEFT:
+                        chatDisplay->AppendText(data.username() + " left\n");
                         break;
                     case jokinojo::ResponseData_DataType_SYNC:
+                        mediaPlayer->setMediaStatus(!data.resumed(), data.timeposition());
+                        chatDisplay->AppendText("Synchronized\n");
                         break;
                     case jokinojo::ResponseData_DataType_VIDEO_NAME:
-                        wxMessageBox(wxString::Format(wxT("Video name is: %s."),data.videoname()), "Incoming Data", wxOK | wxICON_INFORMATION, this);
+                        wxMessageBox(wxString::Format(wxT("Video name is: %s\nYou can open via dragging the media file to the media player window."), data.videoname()), "Incoming Data", wxOK | wxICON_INFORMATION, this);
                         break;
                     case jokinojo::ResponseData_DataType_READY:
-                        wxMessageBox("Everyone is ready", "Incoming Data", wxOK | wxICON_INFORMATION, this);
+                        chatDisplay->AppendText(data.username() + " is ready\n");
                         break;
                     case jokinojo::ResponseData_DataType_CHAT:
+                        chatDisplay->AppendText(data.username() + ": " + data.chatmessage() + "\n");
+                        break;
+                    case jokinojo::ResponseData_DataType_ERROR:
+                        wxMessageBox(wxString::Format(wxT("Error: %s."), data.errormessage()), "Incoming Data", wxOK | wxICON_INFORMATION, this);
                         break;
                     case jokinojo::ResponseData_DataType_NULL_:
+                        wxMessageBox(wxString::Format(wxT("Datatype Null came from server.")), "Incoming Data", wxOK | wxICON_INFORMATION, this);
                         break;
                     default:
                         wxMessageBox("i don't know this data", "Incoming Data", wxOK | wxICON_INFORMATION, this);
                 }
-
-
             });
         });
+
         networker.initialize("0.0.0.0", 5000);
         std::thread networkIncomingHandlerThread(&Networker::handleIncomingData, &networker);
         networkIncomingHandlerThread.detach();
+        mediaPlayer->initialize();
+
 
         // Create main sizer for the frame
         wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -84,6 +100,7 @@ private:
     wxTextCtrl* chatInput;
     wxButton* sendButton;
     Networker& networker = Networker::get_instance();
+    MediaPlayer* mediaPlayer = new MediaPlayer();
 
     void OnCreate(wxCommandEvent& event) {
         wxString username = nicknameInput->GetValue();
@@ -110,12 +127,10 @@ private:
     void OnJoin(wxCommandEvent& event) {
         wxString nickname = nicknameInput->GetValue();
         wxString roomId = wxGetTextFromUser(wxT("Enter Room ID:"), wxT("Room ID"));
-        //networker.requestJoinRoom(wxAtoi(roomId), nickname.ToStdString());
-        wxMessageBox("roomID: " + roomId, "bu olay yerine join network olayi gerceklesecek", wxOK | wxICON_ERROR);
+        networker.requestJoinRoom(wxAtoi(roomId), nickname.ToStdString());
         loginPanel->Hide();
         chatPanel->Show();
         Layout();
-        chatDisplay->AppendText("Connected as " + nickname + "\n");
     }
 };
 

@@ -38,6 +38,9 @@ inline constexpr ResponseData::Impl_::Impl_(
         chatmessage_(
             &::google::protobuf::internal::fixed_address_empty_string,
             ::_pbi::ConstantInitialized()),
+        errormessage_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
         datatype_{static_cast< ::jokinojo::ResponseData_DataType >(0)},
         roomid_{0},
         timeposition_{0},
@@ -144,20 +147,22 @@ const ::uint32_t
         PROTOBUF_FIELD_OFFSET(::jokinojo::ResponseData, _impl_.resumed_),
         PROTOBUF_FIELD_OFFSET(::jokinojo::ResponseData, _impl_.videoname_),
         PROTOBUF_FIELD_OFFSET(::jokinojo::ResponseData, _impl_.chatmessage_),
+        PROTOBUF_FIELD_OFFSET(::jokinojo::ResponseData, _impl_.errormessage_),
         ~0u,
-        3,
+        4,
         ~0u,
         0,
-        4,
         5,
+        6,
         1,
         2,
+        3,
 };
 
 static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
         {0, 15, -1, sizeof(::jokinojo::RequestData)},
-        {22, 38, -1, sizeof(::jokinojo::ResponseData)},
+        {22, 39, -1, sizeof(::jokinojo::ResponseData)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::jokinojo::_RequestData_default_instance_._instance,
@@ -175,24 +180,25 @@ const char descriptor_table_protodef_network_2eproto[] ABSL_ATTRIBUTE_SECTION_VA
     "N_ROOM\020\002\022\010\n\004QUIT\020\003\022\010\n\004SYNC\020\004\022\016\n\nVIDEO_NA"
     "ME\020\005\022\t\n\005READY\020\006\022\010\n\004CHAT\020\007B\013\n\t_usernameB\t"
     "\n\007_roomIdB\017\n\r_timePositionB\n\n\010_resumedB\014"
-    "\n\n_videoNameB\016\n\014_chatMessage\"\252\003\n\014Respons"
+    "\n\n_videoNameB\016\n\014_chatMessage\"\341\003\n\014Respons"
     "eData\0221\n\010dataType\030\001 \001(\0162\037.jokinojo.Respo"
     "nseData.DataType\022\023\n\006roomId\030\002 \001(\005H\000\210\001\001\022\021\n"
     "\tusernames\030\003 \003(\t\022\025\n\010username\030\004 \001(\tH\001\210\001\001\022"
     "\031\n\014timePosition\030\005 \001(\005H\002\210\001\001\022\024\n\007resumed\030\006 "
     "\001(\010H\003\210\001\001\022\026\n\tvideoName\030\007 \001(\tH\004\210\001\001\022\030\n\013chat"
-    "Message\030\010 \001(\tH\005\210\001\001\"r\n\010DataType\022\010\n\004NULL\020\000"
-    "\022\017\n\013CREATE_ROOM\020\001\022\r\n\tJOIN_ROOM\020\002\022\r\n\tUSER"
-    "_LEFT\020\003\022\010\n\004SYNC\020\004\022\016\n\nVIDEO_NAME\020\005\022\t\n\005REA"
-    "DY\020\006\022\010\n\004CHAT\020\007B\t\n\007_roomIdB\013\n\t_usernameB\017"
-    "\n\r_timePositionB\n\n\010_resumedB\014\n\n_videoNam"
-    "eB\016\n\014_chatMessageb\006proto3"
+    "Message\030\010 \001(\tH\005\210\001\001\022\031\n\014errorMessage\030\t \001(\t"
+    "H\006\210\001\001\"}\n\010DataType\022\010\n\004NULL\020\000\022\017\n\013CREATE_RO"
+    "OM\020\001\022\r\n\tJOIN_ROOM\020\002\022\r\n\tUSER_LEFT\020\003\022\010\n\004SY"
+    "NC\020\004\022\016\n\nVIDEO_NAME\020\005\022\t\n\005READY\020\006\022\010\n\004CHAT\020"
+    "\007\022\t\n\005ERROR\020\010B\t\n\007_roomIdB\013\n\t_usernameB\017\n\r"
+    "_timePositionB\n\n\010_resumedB\014\n\n_videoNameB"
+    "\016\n\014_chatMessageB\017\n\r_errorMessageb\006proto3"
 };
 static ::absl::once_flag descriptor_table_network_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_network_2eproto = {
     false,
     false,
-    865,
+    920,
     descriptor_table_protodef_network_2eproto,
     "network.proto",
     &descriptor_table_network_2eproto_once,
@@ -237,9 +243,9 @@ const ::google::protobuf::EnumDescriptor* ResponseData_DataType_descriptor() {
   return file_level_enum_descriptors_network_2eproto[1];
 }
 PROTOBUF_CONSTINIT const uint32_t ResponseData_DataType_internal_data_[] = {
-    524288u, 0u, };
+    589824u, 0u, };
 bool ResponseData_DataType_IsValid(int value) {
-  return 0 <= value && value <= 7;
+  return 0 <= value && value <= 8;
 }
 #if (__cplusplus < 201703) && \
   (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
@@ -252,6 +258,7 @@ constexpr ResponseData_DataType ResponseData::SYNC;
 constexpr ResponseData_DataType ResponseData::VIDEO_NAME;
 constexpr ResponseData_DataType ResponseData::READY;
 constexpr ResponseData_DataType ResponseData::CHAT;
+constexpr ResponseData_DataType ResponseData::ERROR;
 constexpr ResponseData_DataType ResponseData::DataType_MIN;
 constexpr ResponseData_DataType ResponseData::DataType_MAX;
 constexpr int ResponseData::DataType_ARRAYSIZE;
@@ -702,7 +709,8 @@ inline PROTOBUF_NDEBUG_INLINE ResponseData::Impl_::Impl_(
         usernames_{visibility, arena, from.usernames_},
         username_(arena, from.username_),
         videoname_(arena, from.videoname_),
-        chatmessage_(arena, from.chatmessage_) {}
+        chatmessage_(arena, from.chatmessage_),
+        errormessage_(arena, from.errormessage_) {}
 
 ResponseData::ResponseData(
     ::google::protobuf::Arena* arena,
@@ -734,7 +742,8 @@ inline PROTOBUF_NDEBUG_INLINE ResponseData::Impl_::Impl_(
         usernames_{visibility, arena},
         username_(arena),
         videoname_(arena),
-        chatmessage_(arena) {}
+        chatmessage_(arena),
+        errormessage_(arena) {}
 
 inline void ResponseData::SharedCtor(::_pb::Arena* arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
@@ -755,6 +764,7 @@ inline void ResponseData::SharedDtor() {
   _impl_.username_.Destroy();
   _impl_.videoname_.Destroy();
   _impl_.chatmessage_.Destroy();
+  _impl_.errormessage_.Destroy();
   _impl_.~Impl_();
 }
 
@@ -787,15 +797,15 @@ const ::google::protobuf::MessageLite::ClassData* ResponseData::GetClassData() c
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<3, 8, 0, 75, 2> ResponseData::_table_ = {
+const ::_pbi::TcParseTable<4, 9, 0, 87, 2> ResponseData::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(ResponseData, _impl_._has_bits_),
     0, // no _extensions_
-    8, 56,  // max_field_number, fast_idx_mask
+    9, 120,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967040,  // skipmap
+    4294966784,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    8,  // num_field_entries
+    9,  // num_field_entries
     0,  // num_aux_entries
     offsetof(decltype(_table_), field_names),  // no aux_entries
     _class_data_.base(),
@@ -805,15 +815,13 @@ const ::_pbi::TcParseTable<3, 8, 0, 75, 2> ResponseData::_table_ = {
     ::_pbi::TcParser::GetTable<::jokinojo::ResponseData>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // optional string chatMessage = 8;
-    {::_pbi::TcParser::FastUS1,
-     {66, 2, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.chatmessage_)}},
+    {::_pbi::TcParser::MiniParse, {}},
     // .jokinojo.ResponseData.DataType dataType = 1;
     {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(ResponseData, _impl_.datatype_), 63>(),
      {8, 63, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.datatype_)}},
     // optional int32 roomId = 2;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(ResponseData, _impl_.roomid_), 3>(),
-     {16, 3, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.roomid_)}},
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(ResponseData, _impl_.roomid_), 4>(),
+     {16, 4, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.roomid_)}},
     // repeated string usernames = 3;
     {::_pbi::TcParser::FastUR1,
      {26, 63, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.usernames_)}},
@@ -821,14 +829,26 @@ const ::_pbi::TcParseTable<3, 8, 0, 75, 2> ResponseData::_table_ = {
     {::_pbi::TcParser::FastUS1,
      {34, 0, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.username_)}},
     // optional int32 timePosition = 5;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(ResponseData, _impl_.timeposition_), 4>(),
-     {40, 4, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.timeposition_)}},
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(ResponseData, _impl_.timeposition_), 5>(),
+     {40, 5, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.timeposition_)}},
     // optional bool resumed = 6;
-    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(ResponseData, _impl_.resumed_), 5>(),
-     {48, 5, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.resumed_)}},
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(ResponseData, _impl_.resumed_), 6>(),
+     {48, 6, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.resumed_)}},
     // optional string videoName = 7;
     {::_pbi::TcParser::FastUS1,
      {58, 1, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.videoname_)}},
+    // optional string chatMessage = 8;
+    {::_pbi::TcParser::FastUS1,
+     {66, 2, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.chatmessage_)}},
+    // optional string errorMessage = 9;
+    {::_pbi::TcParser::FastUS1,
+     {74, 3, 0, PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.errormessage_)}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
   }}, {{
     65535, 65535
   }}, {{
@@ -836,7 +856,7 @@ const ::_pbi::TcParseTable<3, 8, 0, 75, 2> ResponseData::_table_ = {
     {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.datatype_), -1, 0,
     (0 | ::_fl::kFcSingular | ::_fl::kOpenEnum)},
     // optional int32 roomId = 2;
-    {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.roomid_), _Internal::kHasBitsOffset + 3, 0,
+    {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.roomid_), _Internal::kHasBitsOffset + 4, 0,
     (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
     // repeated string usernames = 3;
     {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.usernames_), -1, 0,
@@ -845,10 +865,10 @@ const ::_pbi::TcParseTable<3, 8, 0, 75, 2> ResponseData::_table_ = {
     {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.username_), _Internal::kHasBitsOffset + 0, 0,
     (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
     // optional int32 timePosition = 5;
-    {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.timeposition_), _Internal::kHasBitsOffset + 4, 0,
+    {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.timeposition_), _Internal::kHasBitsOffset + 5, 0,
     (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
     // optional bool resumed = 6;
-    {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.resumed_), _Internal::kHasBitsOffset + 5, 0,
+    {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.resumed_), _Internal::kHasBitsOffset + 6, 0,
     (0 | ::_fl::kFcOptional | ::_fl::kBool)},
     // optional string videoName = 7;
     {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.videoname_), _Internal::kHasBitsOffset + 1, 0,
@@ -856,15 +876,19 @@ const ::_pbi::TcParseTable<3, 8, 0, 75, 2> ResponseData::_table_ = {
     // optional string chatMessage = 8;
     {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.chatmessage_), _Internal::kHasBitsOffset + 2, 0,
     (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // optional string errorMessage = 9;
+    {PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.errormessage_), _Internal::kHasBitsOffset + 3, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
   }},
   // no aux_entries
   {{
-    "\25\0\0\11\10\0\0\11\13\0\0\0\0\0\0\0"
+    "\25\0\0\11\10\0\0\11\13\14\0\0\0\0\0\0"
     "jokinojo.ResponseData"
     "usernames"
     "username"
     "videoName"
     "chatMessage"
+    "errorMessage"
   }},
 };
 
@@ -877,7 +901,7 @@ PROTOBUF_NOINLINE void ResponseData::Clear() {
 
   _impl_.usernames_.Clear();
   cached_has_bits = _impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000007u) {
+  if (cached_has_bits & 0x0000000fu) {
     if (cached_has_bits & 0x00000001u) {
       _impl_.username_.ClearNonDefaultToEmpty();
     }
@@ -887,9 +911,12 @@ PROTOBUF_NOINLINE void ResponseData::Clear() {
     if (cached_has_bits & 0x00000004u) {
       _impl_.chatmessage_.ClearNonDefaultToEmpty();
     }
+    if (cached_has_bits & 0x00000008u) {
+      _impl_.errormessage_.ClearNonDefaultToEmpty();
+    }
   }
   _impl_.datatype_ = 0;
-  if (cached_has_bits & 0x00000038u) {
+  if (cached_has_bits & 0x00000070u) {
     ::memset(&_impl_.roomid_, 0, static_cast<::size_t>(
         reinterpret_cast<char*>(&_impl_.resumed_) -
         reinterpret_cast<char*>(&_impl_.roomid_)) + sizeof(_impl_.resumed_));
@@ -922,7 +949,7 @@ PROTOBUF_NOINLINE void ResponseData::Clear() {
 
           cached_has_bits = this_._impl_._has_bits_[0];
           // optional int32 roomId = 2;
-          if (cached_has_bits & 0x00000008u) {
+          if (cached_has_bits & 0x00000010u) {
             target = ::google::protobuf::internal::WireFormatLite::
                 WriteInt32ToArrayWithField<2>(
                     stream, this_._internal_roomid(), target);
@@ -945,14 +972,14 @@ PROTOBUF_NOINLINE void ResponseData::Clear() {
           }
 
           // optional int32 timePosition = 5;
-          if (cached_has_bits & 0x00000010u) {
+          if (cached_has_bits & 0x00000020u) {
             target = ::google::protobuf::internal::WireFormatLite::
                 WriteInt32ToArrayWithField<5>(
                     stream, this_._internal_timeposition(), target);
           }
 
           // optional bool resumed = 6;
-          if (cached_has_bits & 0x00000020u) {
+          if (cached_has_bits & 0x00000040u) {
             target = stream->EnsureSpace(target);
             target = ::_pbi::WireFormatLite::WriteBoolToArray(
                 6, this_._internal_resumed(), target);
@@ -972,6 +999,14 @@ PROTOBUF_NOINLINE void ResponseData::Clear() {
             ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
                 _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "jokinojo.ResponseData.chatMessage");
             target = stream->WriteStringMaybeAliased(8, _s, target);
+          }
+
+          // optional string errorMessage = 9;
+          if (cached_has_bits & 0x00000008u) {
+            const std::string& _s = this_._internal_errormessage();
+            ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "jokinojo.ResponseData.errorMessage");
+            target = stream->WriteStringMaybeAliased(9, _s, target);
           }
 
           if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
@@ -1010,7 +1045,7 @@ PROTOBUF_NOINLINE void ResponseData::Clear() {
             }
           }
           cached_has_bits = this_._impl_._has_bits_[0];
-          if (cached_has_bits & 0x00000007u) {
+          if (cached_has_bits & 0x0000000fu) {
             // optional string username = 4;
             if (cached_has_bits & 0x00000001u) {
               total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
@@ -1026,6 +1061,11 @@ PROTOBUF_NOINLINE void ResponseData::Clear() {
               total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
                                               this_._internal_chatmessage());
             }
+            // optional string errorMessage = 9;
+            if (cached_has_bits & 0x00000008u) {
+              total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                              this_._internal_errormessage());
+            }
           }
            {
             // .jokinojo.ResponseData.DataType dataType = 1;
@@ -1034,19 +1074,19 @@ PROTOBUF_NOINLINE void ResponseData::Clear() {
                             ::_pbi::WireFormatLite::EnumSize(this_._internal_datatype());
             }
           }
-          if (cached_has_bits & 0x00000038u) {
+          if (cached_has_bits & 0x00000070u) {
             // optional int32 roomId = 2;
-            if (cached_has_bits & 0x00000008u) {
+            if (cached_has_bits & 0x00000010u) {
               total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
                   this_._internal_roomid());
             }
             // optional int32 timePosition = 5;
-            if (cached_has_bits & 0x00000010u) {
+            if (cached_has_bits & 0x00000020u) {
               total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
                   this_._internal_timeposition());
             }
             // optional bool resumed = 6;
-            if (cached_has_bits & 0x00000020u) {
+            if (cached_has_bits & 0x00000040u) {
               total_size += 2;
             }
           }
@@ -1064,7 +1104,7 @@ void ResponseData::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::go
 
   _this->_internal_mutable_usernames()->MergeFrom(from._internal_usernames());
   cached_has_bits = from._impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000007u) {
+  if (cached_has_bits & 0x0000000fu) {
     if (cached_has_bits & 0x00000001u) {
       _this->_internal_set_username(from._internal_username());
     }
@@ -1074,18 +1114,21 @@ void ResponseData::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::go
     if (cached_has_bits & 0x00000004u) {
       _this->_internal_set_chatmessage(from._internal_chatmessage());
     }
+    if (cached_has_bits & 0x00000008u) {
+      _this->_internal_set_errormessage(from._internal_errormessage());
+    }
   }
   if (from._internal_datatype() != 0) {
     _this->_impl_.datatype_ = from._impl_.datatype_;
   }
-  if (cached_has_bits & 0x00000038u) {
-    if (cached_has_bits & 0x00000008u) {
+  if (cached_has_bits & 0x00000070u) {
+    if (cached_has_bits & 0x00000010u) {
       _this->_impl_.roomid_ = from._impl_.roomid_;
     }
-    if (cached_has_bits & 0x00000010u) {
+    if (cached_has_bits & 0x00000020u) {
       _this->_impl_.timeposition_ = from._impl_.timeposition_;
     }
-    if (cached_has_bits & 0x00000020u) {
+    if (cached_has_bits & 0x00000040u) {
       _this->_impl_.resumed_ = from._impl_.resumed_;
     }
   }
@@ -1111,6 +1154,7 @@ void ResponseData::InternalSwap(ResponseData* PROTOBUF_RESTRICT other) {
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.username_, &other->_impl_.username_, arena);
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.videoname_, &other->_impl_.videoname_, arena);
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.chatmessage_, &other->_impl_.chatmessage_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.errormessage_, &other->_impl_.errormessage_, arena);
   ::google::protobuf::internal::memswap<
       PROTOBUF_FIELD_OFFSET(ResponseData, _impl_.resumed_)
       + sizeof(ResponseData::_impl_.resumed_)
