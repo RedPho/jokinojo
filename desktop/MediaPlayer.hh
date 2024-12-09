@@ -10,11 +10,22 @@
 class MediaPlayer {
 private:
     mpv_handle *mpv;
+    int m_paused;
+    bool m_isHost;
 public:
+    void setIsHost(bool h) {
+        m_isHost = h;
+    }
+    bool isHost() {
+        return m_isHost;
+    }
     void check_mpv_error(int status);
     bool initialize();
     void setMediaStatus(bool isPaused, int timePosition);
+    bool getIsPaused();
+    int getTimePosition();
     std::string getFileName();
+    void handleMediaChanges();
 };
 
 

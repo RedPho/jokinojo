@@ -6,21 +6,24 @@ from room import Room
 
 users = []
 rooms = []
+rooms_lock = threading.Lock()
 
 def handle_client(user: User):
-
     while True:
         try:
             message = user.socket.recv(1024)
             if not message:
-                print(f"{user.user_name} disconnected (empty message).")
+                print(f"{user.username} disconnected (empty message).")
                 break
 
-            print(f"Received from {user.user_name}: {message}")
+            print(f"Received from {user.username}: {message}")
             response = handle_request(message, user)
             user.socket.send(response.SerializeToString())
+        except socket.error as e:
+            print(f"Socket error for {user.username}: {e}")
+            break
         except Exception as e:
-            print(f"Error for {user.user_name}: {e}")
+            print(f"Unexpected error for {user.username}: {e}")
             break
 
 
@@ -42,10 +45,12 @@ def handle_request(raw_data, user):
         return response
 
 def create_room(request, user):
-    user.user_name = request.username
+    user.username = request.username
     room = Room()
     room.add_user(user)
-    rooms.append(room)
+    with rooms_lock:
+        ##rooms arrayini kitelyip ayni anda baska threadlerin erismesini engelledim
+        rooms.append(room)
     print(f"Room created with id {room.room_id}")
     response = pb.ResponseData()
     response.dataType = pb.ResponseData.CREATE_ROOM
@@ -53,23 +58,30 @@ def create_room(request, user):
     return response
 
 def join_room(request, user):
-    user.user_name = request.username
+    user.username = request.username
     room_id = request.roomId
     is_room_exist = False
-    for room in rooms:
-        if room.room_id == room_id:
-            is_room_exist = True
-            room.add_user(user)
-            if room.ready:
-                room.ready = False
-                pause_all_users(room)
-            #ready degiskeni dogruysa false yapip
-            #tüm kullanicilara pause atsin
+    with rooms_lock:
+        ##rooms arrayini kitelyip ayni anda baska threadlerin erismesini engelledim
+        for room in rooms:
+            if is_room_exist:
+                break
+            if room.room_id == room_id:
+                is_room_exist = True
+                if user not in room.users:
+                    room.add_user(user)
+                    send_new_userlist_to_current_users(room, user)
+
+                if room.ready:
+                    room.ready = False
+                    #pause_all_users(room)
+                #ready degiskeni dogruysa false yapip
+                #tüm kullanicilara pause atsin
 
     if is_room_exist:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.JOIN_ROOM
-        response.usernames.extend([user.user_name for user in room.users])
+        response.usernames.extend([user.username for user in room.users])
         response.videoName = room.video_name
         return response
     else:
@@ -98,6 +110,22 @@ def ready(request,user):
 
 
 
+def send_new_userlist_to_current_users(room, user):
+    for current_user in room.users:
+        if current_user == user:  # Skip the newly joined user
+            continue
+        response = pb.ResponseData()
+        response.dataType = pb.ResponseData.JOIN_ROOM
+        response.usernames.extend([u.username for u in room.users])  # Corrected to user_name
+        response.videoName = room.video_name
+
+        try:
+            current_user.socket.send(response.SerializeToString())  # Send serialized data
+            print(f"New userlist sent to {current_user.username}")  # Corrected to user_name
+        except Exception as e:
+            print(f"Failed to send userlist to {current_user.username}: {e}")
+
+
 # Server setup
 def start_server(host='0.0.0.0', port=5000):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -115,7 +143,7 @@ def start_server(host='0.0.0.0', port=5000):
         user = User(username, client_socket)  # Corrected to match the User class constructor
         users.append(user)
 
-        print(f"{user.user_name} joined the server.")
+        print(f"{user.username} joined the server.")
 
         # Start a new thread for this user
         thread = threading.Thread(target=handle_client, args=(user,))
