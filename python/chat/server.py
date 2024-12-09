@@ -58,14 +58,15 @@ def handle_request(raw_data, user):
         return user_left(request, user)
     elif request_type == pb.RequestData.READY:
         return ready(request,user)
+    elif request_type == pb.RequestData.READY:
+        response = ready(request,user)
+        return response
     else:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.ERROR
         response.errorMessage = "Unknown request type."
         return response
-    elif request_type == pb.RequestData.READY:
-        response = ready(request,user)
-        return response
+    
 
 def create_room(request, user):
     user.username = request.username
