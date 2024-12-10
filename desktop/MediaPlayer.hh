@@ -35,7 +35,6 @@ public:
     double getTimePositionSeconds();
     int getTimePositionMiliseconds();
     std::string getFileName();
-    void handleMediaChanges();
 };
 
 

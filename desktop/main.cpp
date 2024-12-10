@@ -14,6 +14,10 @@ public:
                         wxMessageBox(wxString::Format(wxT("Room id is %i"),data.roomid()), "Incoming Data", wxOK | wxICON_INFORMATION, this);
                         isHost = true;
                         mediaPlayer->setIsHost(isHost);
+                        {
+                            std::thread mediaActionsHandlerThread(&MediaPlayer::handleMediaActions, mediaPlayer);
+                            mediaActionsHandlerThread.detach();
+                        }
                         break;
                     case jokinojo::ResponseData_DataType_JOIN_ROOM:
                         isHost = false;
@@ -22,6 +26,10 @@ public:
                         chatDisplay->AppendText("Users in room:\n");
                         for (const std::string& username: data.usernames()) {
                             chatDisplay->AppendText(username + "\n");
+                        }
+                        {
+                            std::thread mediaActionsHandlerThread(&MediaPlayer::handleMediaActions, mediaPlayer);
+                            mediaActionsHandlerThread.detach();
                         }
                         break;
                     case jokinojo::ResponseData_DataType_USER_LEFT:
