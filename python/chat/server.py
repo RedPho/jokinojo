@@ -58,9 +58,6 @@ def handle_request(raw_data, user):
         return user_left(request, user)
     elif request_type == pb.RequestData.READY:
         return ready(request,user)
-    elif request_type == pb.RequestData.READY:
-        response = ready(request,user)
-        return response
     else:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.ERROR
@@ -113,12 +110,13 @@ def ready(request,user):
     user.user_name = request.username
     user.ready =  True
     room_id = request.roomId
-    for room in rooms:
-       if room.roomId == room_id and room.ready:
-            response = pb.ResponseData.Ready()
-            response.usernames.extend([user.user_name for user in room.users])
-            response.ready = user.ready
-            return response 
+    with rooms_lock:
+        for room in rooms:
+           if room.roomId == room_id and room.ready:
+                response = pb.ResponseData.Ready()
+                response.usernames.extend([user.user_name for user in room.users])
+                response.ready = user.ready
+                return response
 
     # Eğer hiçbir oda eşleşmezse hata döndür
     if response is None:
