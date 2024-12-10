@@ -25,8 +25,11 @@ public:
     bool requestQuit();
     bool sendReadyStatus();
 
-    bool sendChatMessage();
+    bool sendChatMessage(std::string message);
     bool sendFile(void* fileData);
+    bool sendFileName(std::string fileName);
+    bool serializeAndSendData(jokinojo::RequestData);
+
     bool sendMediaStatus(int timePosition, bool isPaused);
 
 private:
