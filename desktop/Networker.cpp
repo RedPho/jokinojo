@@ -108,6 +108,13 @@ bool Networker::sendReadyStatus() {
     return serializeAndSendData(networkData);
 }
 
+bool Networker::sendChatMessage(std::string message) {
+    jokinojo::RequestData networkData;
+    networkData.set_datatype(jokinojo::RequestData_DataType_CHAT);
+    networkData.set_chatmessage(message);
+    return serializeAndSendData(networkData);
+}
+
 bool Networker::serializeAndSendData(jokinojo::RequestData networkData) {
     std::string serializedData;
     if (!networkData.SerializeToString(&serializedData)) {

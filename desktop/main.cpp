@@ -124,6 +124,7 @@ private:
         wxString message = chatInput->GetValue();
         if (message.IsEmpty()) return;
 
+        networker.sendChatMessage(message.ToStdString());
         chatDisplay->AppendText("You: " + message + "\n");
         chatInput->Clear();
     }
