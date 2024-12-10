@@ -13,9 +13,11 @@ public:
                     case jokinojo::ResponseData_DataType_CREATE_ROOM:
                         wxMessageBox(wxString::Format(wxT("Room id is %i"),data.roomid()), "Incoming Data", wxOK | wxICON_INFORMATION, this);
                         isHost = true;
+                        mediaPlayer->setIsHost(isHost);
                         break;
                     case jokinojo::ResponseData_DataType_JOIN_ROOM:
                         isHost = false;
+                        mediaPlayer->setIsHost(isHost);
                         chatDisplay->AppendText("Connected\n");
                         chatDisplay->AppendText("Users in room:\n");
                         for (const std::string& username: data.usernames()) {
@@ -23,6 +25,7 @@ public:
                         }
                         break;
                     case jokinojo::ResponseData_DataType_USER_LEFT:
+                        mediaPlayer->setMediaPausedStatus(true);
                         chatDisplay->AppendText(data.username() + " left\n");
                         break;
                     case jokinojo::ResponseData_DataType_SYNC:
