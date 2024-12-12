@@ -106,23 +106,27 @@ def join_room(request, user):
         return response
 
 
-def ready(request,user):
-    user.user_name = request.username
-    user.ready =  True
+def ready(request, user):
+    user.username = request.username
+    user.ready = True
     room_id = request.roomId
+    
     with rooms_lock:
         for room in rooms:
-           if room.roomId == room_id and room.ready:
-                response = pb.ResponseData.Ready()
-                response.usernames.extend([user.user_name for user in room.users])
+            if room.room_id == room_id:
+                # Diğer kullanıcılara ready durumunu bildir
+                send_new_userlist_to_current_users(room, user, pb.ResponseData.READY)
+                
+                response = pb.ResponseData()
+                response.dataType = pb.ResponseData.READY
+                response.usernames.extend([f"{u.username}:{u.ready}" for u in room.users])
                 response.ready = user.ready
                 return response
 
-    # Eğer hiçbir oda eşleşmezse hata döndür
-    if response is None:
-        response = pb.ResponseData.ERROR()
-        response.errorMessage = "Room not found"
-
+    response = pb.ResponseData()
+    response.dataType = pb.ResponseData.ERROR
+    response.errorMessage = "Room not found"
+    logging.warning(f"Room {room_id} not found.")
     return response
 
 
