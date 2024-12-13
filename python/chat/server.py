@@ -58,6 +58,8 @@ def handle_request(raw_data, user):
         return user_left(request, user)
     elif request_type == pb.RequestData.READY:
         return ready(request,user)
+    elif request_type == pb.RequestData.CHAT:
+        return chat(request, user)
     else:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.ERROR
@@ -123,6 +125,45 @@ def ready(request, user):
                 response.ready = user.ready
                 return response
 
+    response = pb.ResponseData()
+    response.dataType = pb.ResponseData.ERROR
+    response.errorMessage = "Room not found"
+    logging.warning(f"Room {room_id} not found.")
+    return response
+
+def chat(request, user):
+    user.username = request.username
+    room_id = request.roomId
+    chat_message = request.chatMessage
+
+    with rooms_lock:
+        for room in rooms:
+            if room.room_id == room_id:
+                # Mesajı odaya ekle
+                room.add_chat_message(f"{user.username}: {chat_message}")
+                
+                # Odadaki diğer kullanıcılara mesajı gönder
+                for current_user in room.users:
+                    if current_user == user:
+                        continue
+
+                    response = pb.ResponseData()
+                    response.dataType = pb.ResponseData.CHAT
+                    response.usernames.extend([f"{user.username}: {chat_message}"])
+
+                    try:
+                        current_user.socket.send(response.SerializeToString())
+                        logging.info(f"Chat mesajı {current_user.username} kullanıcısına iletildi")
+                    except Exception as e:
+                        logging.warning(f"{current_user.username} kullanıcısına mesaj gönderilemedi: {e}")
+                
+                # Gönderen kullanıcıya yanıt
+                response = pb.ResponseData()
+                response.dataType = pb.ResponseData.CHAT
+                response.usernames.extend([f"{user.username}: {chat_message}"])
+                return response
+
+    # Oda bulunamadıysa hata döndür
     response = pb.ResponseData()
     response.dataType = pb.ResponseData.ERROR
     response.errorMessage = "Room not found"
