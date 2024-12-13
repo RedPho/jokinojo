@@ -45,6 +45,10 @@ def handle_response(raw_data):
                 room.video_name = response.videoName
             print(f"User left the room. Current users: {room.users}")
             print(f"Current video name: {room.video_name}")
+        elif response_type == network_pb2.ResponseData.READY:
+            print(f"Ready to play video: {room.video_name}")
+        elif response_type == network_pb2.ResponseData.CHAT:
+            print(f"Chat message received: {response.chatMessage}")
         elif response_type == network_pb2.ResponseData.ERROR:
             print(f"Error from server: {response.errorMessage}")
         else:
@@ -57,7 +61,7 @@ def send_messages(client_socket, username):
     global room
     while True:
         try:
-            choice = input("Choose an action: [1] Create Room, [2] Join Room, [3] Leave Room, [4] Quit: ")
+            choice = input("Choose an action: [1] Create Room, [2] Join Room, [3] Leave Room, [4] Quit, [5] Chat: ")
             if choice == '1':
                 request = network_pb2.RequestData()
                 request.dataType = network_pb2.RequestData.CREATE_ROOM
@@ -89,6 +93,13 @@ def send_messages(client_socket, username):
                 print("Exiting...")
                 client_socket.close()
                 break
+            elif choice == '5':
+                chat_message = input("Enter chat message: ")
+                request = network_pb2.RequestData()
+                request.dataType = network_pb2.RequestData.CHAT
+                request.chatMessage = chat_message
+                client_socket.send(request.SerializeToString())
+                print("Chat message sent.")
             else:
                 print("Invalid choice. Please select a valid option.")
             time.sleep(1)  # Prevent flooding the server
