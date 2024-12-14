@@ -9,6 +9,9 @@ class Room:
         self.users = []
         self.ready = False
         self.chat_messages = []
+        self.time_position = 0.0
+        self.resumed = False
+
         
     def add_user(self, user: User):
         if user not in self.users:

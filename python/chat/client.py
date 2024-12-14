@@ -51,6 +51,12 @@ def handle_response(raw_data):
             print(f"Chat message received: {response.chatMessage}")
         elif response_type == network_pb2.ResponseData.ERROR:
             print(f"Error from server: {response.errorMessage}")
+        elif response_type == network_pb2.ResponseData.SYNC:
+            with room_lock:
+                room.current_time = response.currentTime  # Sunucudan gelen mevcut zaman bilgisini saklıyoruz.
+                room.is_playing = response.isPlaying  # Oynatma durumunu güncelliyoruz.
+            print(f"Video synced: Current time is {room.current_time}, is playing: {room.is_playing}")
+
         else:
             print("Unknown response type received.")
     except Exception as e:
@@ -61,7 +67,7 @@ def send_messages(client_socket, username):
     global room
     while True:
         try:
-            choice = input("Choose an action: [1] Create Room, [2] Join Room, [3] Leave Room, [4] Quit, [5] Chat: ")
+            choice = input("Choose an action: [1] Create Room, [2] Join Room, [3] Leave Room, [4] Quit, [5] Chat: , [6] Send Time")
             if choice == '1':
                 request = network_pb2.RequestData()
                 request.dataType = network_pb2.RequestData.CREATE_ROOM
@@ -100,6 +106,18 @@ def send_messages(client_socket, username):
                 request.chatMessage = chat_message
                 client_socket.send(request.SerializeToString())
                 print("Chat message sent.")
+            elif choice == '6':
+                with room_lock:
+                    try:
+                        time_position = int(input("Enter current time:"))
+                        request = network_pb2.RequestData()
+                        request.dataType = network_pb2.RequestData.SYNC
+                        request.timePosition = time_position  # Host'un mevcut zamanı
+                        request.resumed = room.resumed  # Host'un oynatma durumu
+                        client_socket.send(request.SerializeToString())
+                    except Exception as e:
+                        print(f"Error sending current time to server: {e}")
+
             else:
                 print("Invalid choice. Please select a valid option.")
             time.sleep(1)  # Prevent flooding the server

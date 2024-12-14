@@ -60,6 +60,8 @@ def handle_request(raw_data, user):
         return ready(request,user)
     elif request_type == pb.RequestData.CHAT:
         return chat(request, user)
+    elif request_type == pb.RequestData.SYNC:
+        return sync(request, user)
     else:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.ERROR
@@ -105,6 +107,55 @@ def join_room(request, user):
         response.dataType = pb.ResponseData.ERROR
         response.errorMessage = "Room does not exist."
         logging.warning(f"Room {room_id} not found.")
+        return response
+
+
+def sync(request, user):
+    user.username = request.username
+    time_position = request.timePosition
+    resumed = request.resumed
+    room_id = request.roomId
+
+    with rooms_lock:
+        # İlgili oda kontrolü
+        target_room = None
+        for room in rooms:
+            if room.room_id == room_id:
+                target_room = room
+                break
+
+        if not target_room:
+            response = pb.ResponseData()
+            response.dataType = pb.ResponseData.ERROR
+            response.errorMessage = f"Room with ID {room_id} not found."
+            logging.warning(f"Sync failed: Room {room_id} not found.")
+            return response
+
+            # Oda hazır değilse hata döndür
+        if not target_room.ready:
+            response = pb.ResponseData()
+            response.dataType = pb.ResponseData.ERROR
+            response.errorMessage = "Room is not ready for sync."
+            logging.warning(f"Sync failed: Room {room_id} is not ready.")
+            return response
+
+        # Oda bulunursa, senkronizasyon bilgilerini tüm kullanıcılara yayınla
+        response = pb.ResponseData()
+        response.dataType = pb.ResponseData.SYNC
+        response.hostCurrentTime = current_time
+        response.hostIsPlaying = is_playing
+
+        logging.info(f"Syncing room {room_id} with current_time={current_time}, is_playing={is_playing}")
+
+        # Odaya bağlı tüm kullanıcılara senkronizasyon bilgilerini gönder
+        for current_user in target_room.users:
+            try:
+                current_user.socket.send(response.SerializeToString())
+                logging.info(f"Sync info sent to {current_user.username}.")
+            except Exception as e:
+                logging.warning(f"Failed to send sync info to {current_user.username}: {e}")
+
+        # Sync işlemini gerçekleştiren kullanıcıya yanıt döndür
         return response
 
 
@@ -227,6 +278,7 @@ def cleanup_user(user):
     except Exception:
         pass
     logging.info(f"Cleaned up user {user.username}.")
+
 
 def start_server(host='0.0.0.0', port=5000):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
