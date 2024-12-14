@@ -124,6 +124,9 @@ def sync(request, user):
                 target_room = room
                 break
 
+        print()
+        print("a")
+
         if not target_room:
             response = pb.ResponseData()
             response.dataType = pb.ResponseData.ERROR
