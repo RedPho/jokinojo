@@ -145,8 +145,8 @@ def sync(request, user):
         # Oda bulunursa, senkronizasyon bilgilerini tüm kullanıcılara yayınla
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.SYNC
-        response.hostCurrentTime = current_time
-        response.hostIsPlaying = is_playing
+        response.timePosition = time_position
+        response.resumed = resumed
 
         logging.info(f"Syncing room {room_id} with current_time={current_time}, is_playing={is_playing}")
 
