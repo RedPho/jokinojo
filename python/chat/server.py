@@ -152,11 +152,14 @@ def sync(request, user):
 
         # Odaya bağlı tüm kullanıcılara senkronizasyon bilgilerini gönder
         for current_user in target_room.users:
-            try:
-                current_user.socket.send(response.SerializeToString())
-                logging.info(f"Sync info sent to {current_user.username}.")
-            except Exception as e:
-                logging.warning(f"Failed to send sync info to {current_user.username}: {e}")
+            if current_user == user:
+                continue
+            else:
+                try:
+                    current_user.socket.send(response.SerializeToString())
+                    logging.info(f"Sync info sent to {current_user.username}.")
+                except Exception as e:
+                    logging.warning(f"Failed to send sync info to {current_user.username}: {e}")
 
         # Sync işlemini gerçekleştiren kullanıcıya yanıt döndür
         return response
@@ -165,16 +168,19 @@ def sync(request, user):
 def ready(request, user):
     user.username = request.username
     user.ready = True
+    ## not ready durumu da olmalı mı?
     room_id = request.roomId
     
     with rooms_lock:
         for room in rooms:
             if room.room_id == room_id:
                 # Diğer kullanıcılara ready durumunu bildir
+                ##sadece ready olan kullanıcı da gönderilebilir
                 send_new_userlist_to_current_users(room, user, pb.ResponseData.READY)
                 
                 response = pb.ResponseData()
                 response.dataType = pb.ResponseData.READY
+                ##sadece ready olan kullanıcılar döndürmek yeterli olur
                 response.usernames.extend([f"{u.username}:{u.ready}" for u in room.users])
                 response.ready = user.ready
                 return response
@@ -203,6 +209,8 @@ def chat(request, user):
 
                     response = pb.ResponseData()
                     response.dataType = pb.ResponseData.CHAT
+                    ##mesaj nerede gönderildi
+                    ##sadece gönderen kullanıcının username göndersek yeterli olur
                     response.usernames.extend([f"{user.username}: {chat_message}"])
 
                     try:
@@ -214,6 +222,7 @@ def chat(request, user):
                 # Gönderen kullanıcıya yanıt
                 response = pb.ResponseData()
                 response.dataType = pb.ResponseData.CHAT
+                ##sadece başarılı göndwerildiği için chat geri döndürsek yeter bence usernames gerek var mı
                 response.usernames.extend([f"{user.username}: {chat_message}"])
                 return response
 
