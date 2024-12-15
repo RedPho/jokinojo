@@ -110,6 +110,7 @@ def send_messages(client_socket, username):
                 time_position = int(input("Enter current time:"))
                 request = network_pb2.RequestData()
                 request.dataType = network_pb2.RequestData.SYNC
+                request.roomId = room.room_id
                 request.timePosition = time_position  # Host'un mevcut zamanı
                 request.resumed = room.resumed  # Host'un oynatma durumu
                 client_socket.send(request.SerializeToString())

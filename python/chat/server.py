@@ -148,7 +148,7 @@ def sync(request, user):
         response.timePosition = time_position
         response.resumed = resumed
 
-        logging.info(f"Syncing room {room_id} with current_time={current_time}, is_playing={is_playing}")
+        logging.info(f"Syncing room {room_id} with current_time={time_position}, is_playing={resumed}")
 
         # Odaya bağlı tüm kullanıcılara senkronizasyon bilgilerini gönder
         for current_user in target_room.users:
