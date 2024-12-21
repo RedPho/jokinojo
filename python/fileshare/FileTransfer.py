@@ -83,13 +83,13 @@ class FileTransfer:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as file_socket:
             file_socket.connect((self.host, self.port))
 
-            fileshare = pb.FileShare()
-            fileshare.datatype = pb.FileShare.FILE_INFO
-            fileshare.fileName = os.path.basename(self.file_path)
-            fileshare.fileSize = os.path.getsize(self.file_path)
-            fileshare.hash = self.calculate_hash(self.file_path)
+            file_info = pb.FileShare()
+            file_info.datatype = pb.FileShare.FILE_INFO
+            file_info.fileName = os.path.basename(self.file_path)
+            file_info.fileSize = os.path.getsize(self.file_path)
+            file_info.hash = self.calculate_hash(self.file_path)
 
-            self.send_message(file_socket, fileshare)
+            self.send_message(file_socket, file_info)
 
             for index, chunk in self.divide_file_into_chunks():
                 piece_message = pb.FileShare()
@@ -99,9 +99,34 @@ class FileTransfer:
 
                 self.send_message(file_socket, piece_message)
 
-            finish_message = pb.FileShare()
-            finish_message.datatype = pb.FileShare.FINISHED
-            self.send_message(file_socket, finish_message)
+            while True:
+                finish_message = pb.FileShare()
+                finish_message.datatype = pb.FileShare.FINISHED
+                self.send_message(file_socket, finish_message)
+
+                response = self.receive_message(file_socket)
+                if not response:
+                    break
+
+                message = pb.FileShare()
+                message.ParseFromString(response)
+
+                if message.datatype == pb.FileShare.FINISHED:
+                    print("File transfer completed successfully.")
+                    break
+                elif message.datatype == pb.FileShare.MISSING:
+                    for missing_index in message.missingPieces:
+                        print(f"Resending missing piece: {missing_index}")
+                        with open(self.file_path, "rb") as f:
+                            ## dosyada eksik parçanın başladığı yere gitmek için
+                            ## parça boyutu * index noktasından okumaya başlanır
+                            f.seek(missing_index * CHUNK_SIZE)
+                            chunk = f.read(CHUNK_SIZE)
+                            piece_message = pb.FileShare()
+                            piece_message.datatype = pb.FileShare.PIECE
+                            piece_message.pieceIndex = missing_index
+                            piece_message.pieceData = chunk
+                            self.send_message(file_socket, piece_message)
 
     def receive_file(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as file_socket:
@@ -126,8 +151,26 @@ class FileTransfer:
                         self.received_chunks[message.pieceIndex] = message.pieceData
 
                     elif message.datatype == pb.FileShare.FINISHED:
-                        self.assemble_file()
-                        break
+                        ## dosya boyutuna parça boyutunu ekleyip bir çıkarıp bölündüğünde toplam kaç parça
+                        ## olması gerektiği hesaplanır. Parça boyutunu ekleyip bir çıkarıp bölmenin mantığı eğer dosya
+                        ## chunk/parça boyutunun tam katı değilse diye. "//" da bölme işleminin tam sayı sonucunu verir
+                        missing_chunks = [i for i in range((self.file_size + CHUNK_SIZE - 1) // CHUNK_SIZE) if
+                                          i not in self.received_chunks]
+                        ## parça sayısı hesaplanıp tüm "i" ler için kontrol edilir eğer alınan parçalarda
+                        ## indexi i olan yoksa missing chunks içine "i" eklenir
+
+                        if missing_chunks:
+                            print(f"Missing chunks detected: {missing_chunks}")
+                            missing_message = pb.FileShare()
+                            missing_message.datatype = pb.FileShare.MISSING
+                            missing_message.missingPieces.extend(missing_chunks)
+                            self.send_message(conn, missing_message)
+                        else:
+                            self.assemble_file()
+                            finish_message = pb.FileShare()
+                            finish_message.datatype = pb.FileShare.FINISHED
+                            self.send_message(conn, finish_message)
+                            break
 
     def execute(self):
         if self.role == 'sender':
