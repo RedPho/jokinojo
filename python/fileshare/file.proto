@@ -6,10 +6,11 @@ package jokinojo;
 message FileShare {
   enum DataType {
     NULL = 0;
-    FILE_INFO = 1;  // Dosya hakkında bilgi (adı, boyutu, hash)
-    PIECE = 2;      // Bir dosya parçası
-    MISSING = 3;    // Eksik parçaların bilgisi
-    FINISHED = 4;   // Gönderim tamamlandı
+    FILE_INFO = 1;    // Dosya hakkında bilgi (adı, boyutu, hash)
+    PIECE = 2;        // Bir dosya parçası
+    MISSING = 3;      // Eksik parçaların bilgisi
+    MISSING_INFO = 4; // Dosya bilgisi eksikse
+    FINISHED = 5;     // Gönderim tamamlandı
   }
 
   DataType datatype = 1;          // Mesaj türü
