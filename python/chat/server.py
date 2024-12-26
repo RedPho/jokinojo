@@ -62,16 +62,92 @@ def handle_request(raw_data, user):
         return chat(request, user)
     elif request_type == pb.RequestData.SYNC:
         return sync(request, user)
+    elif request_type == pb.RequestData.FILE_SHARE:
+        return share_file(request, user)
     else:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.ERROR
         response.errorMessage = "Unknown request type."
         return response
 
+def share_file(request, user):
+    room_id = request.roomId
+    current_room = None
+    with rooms_lock:
+        for room in rooms:
+            if room.room_id == room_id:
+                current_room = room
+
+
+    ##Eğer istek içinde fileShare objesi varsa(HasField doğruysa) dosya transferi başlamıştır o yüzden hosta
+    ##dosya isteiğ göndermek yerine gelen mesajın kimden geldiğine göre mesaj
+    ##dosyayı isteyen clienta ya da clientdan hosta yönlendirilir
+    if request.HasField("fileShare"):
+       with rooms_lock:
+           if user == current_room.get_host():
+                send_to = current_room.get_user_by_name(request.username)
+
+                piece_data = pb.ResponseData()
+                piece_data.dataType = pb.ResponseData.FILE_SHARE
+
+                if request.fileShare.datatype == pb.FileShare.FILE_INFO:
+                    piece_data.fileShare.dataType = pb.FileShare.FILE_INFO
+                    piece_data.fileShare.fileName = request.fileShare.fileName
+                    piece_data.fileShare.fileSize = request.fileShare.fileSize
+                    piece_data.fileShare.hash = request.fileShare.hash
+                elif request.fileShare.datatype == pb.FileShare.PIECE:
+                    piece_data.fileShare.dataType = pb.FileShare.PIECE
+                    piece_data.fileShare.pieceIndex = request.fileShare.pieceIndex
+                    piece_data.fileShare.pieceData = request.fileShare.pieceData
+                elif request.fileShare.datatype == pb.FileShare.FINISHED:
+                    piece_data.fileShare.dataType = pb.FileShare.FINISHED
+
+                try:
+                    send_to.socket.send(piece_data.SerializeToString())
+                    logging.info(f"File message with type {piece_data.fileShare.dataType} sent to {send_to.username}.")
+                except Exception as e:
+                    logging.warning(f"Error sending file message to {send_to.username}: {e}")
+           else:
+                host = current_room.get_host()
+
+                missing_data = pb.ResponseData()
+                missing_data.dataType = pb.ResponseData.FILE_SHARE
+
+                if request.fileShare.datatype == pb.FileShare.MISSING_INFO:
+                    missing_data.fileShare.dataType == pb.FileShare.MISSING_INFO
+                elif request.fileShare.datatype == pb.FileShare.MISSING:
+                    missing_data.fileShare.dataType == pb.FileShare.MISSING
+                    missing_data.fileShare.missingPieces = request.fileShare.missingPieces
+
+                try:
+                    host.socket.send(missing_data.SerializeToString())
+                    logging.info(f"File message with type {missing_data.fileShare.dataType} sent to {host.username}.")
+                except Exception as e:
+                    logging.warning(f"Error sending file message to {host.username}: {e}")
+    else :
+        with rooms_lock:
+            if current_room.is_video_name_assigned():
+                host = room.get_host()
+
+                file_request = pb.RequestData()
+                file_request.dataType = pb.RequestData.FILE_SHARE
+                file_request.username = user.username
+
+                try:
+                    host.socket.send(file_request.SerializeToString())
+                    logging.info(f"File request sent to {host.username}.")
+                except Exception as e:
+                    logging.warning(f"Error sending request to {host.username}: {e}")
+
+    response = pb.ResponseData()
+    response.dataType = pb.ResponseData.FILE_SHARE
+    return response
+
 def create_room(request, user):
     user.username = request.username
     room = Room()
     room.add_user(user)
+    room.set_host(user)
 
     with rooms_lock:
         rooms.append(room)

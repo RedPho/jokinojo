@@ -1,3 +1,4 @@
+from chat.server import users
 from user import User
 
 class Room:
@@ -7,12 +8,26 @@ class Room:
         self.room_id = Room._id_counter
         self.video_name = ""
         self.users = []
+        self.host = None
         self.ready = False
         self.chat_messages = []
         self.time_position = 0.0
         self.resumed = False
 
-        
+    def is_video_name_assigned(self):
+        return self.video_name != ""
+
+    def get_host(self):
+        return self.host
+
+    def set_host(self, user: User):
+        self.host = User
+
+    def get_user_by_name(self, name):
+        for user in users:
+            if user.username == name:
+                return user
+
     def add_user(self, user: User):
         if user not in self.users:
             self.users.append(user)
