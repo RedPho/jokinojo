@@ -77,14 +77,20 @@ def share_file(request, user):
         for room in rooms:
             if room.room_id == room_id:
                 current_room = room
+                break
 
+    if current_room is None:
+        response = pb.ResponseData()
+        response.dataType = pb.ResponseData.ERROR
+        response.errorMessage = "Room not found."
+        return response
 
     ##Eğer istek içinde fileShare objesi varsa(HasField doğruysa) dosya transferi başlamıştır o yüzden hosta
     ##dosya isteiğ göndermek yerine gelen mesajın kimden geldiğine göre mesaj
     ##dosyayı isteyen clienta ya da clientdan hosta yönlendirilir
     if request.HasField("fileShare"):
-       with rooms_lock:
-           if user == current_room.get_host():
+        with rooms_lock:
+            if user == current_room.get_host():
                 send_to = current_room.get_user_by_name(request.username)
 
                 piece_data = pb.ResponseData()
@@ -107,16 +113,16 @@ def share_file(request, user):
                     logging.info(f"File message with type {piece_data.fileShare.dataType} sent to {send_to.username}.")
                 except Exception as e:
                     logging.warning(f"Error sending file message to {send_to.username}: {e}")
-           else:
+            else:
                 host = current_room.get_host()
 
                 missing_data = pb.ResponseData()
                 missing_data.dataType = pb.ResponseData.FILE_SHARE
 
                 if request.fileShare.datatype == pb.FileShare.MISSING_INFO:
-                    missing_data.fileShare.dataType == pb.FileShare.MISSING_INFO
+                    missing_data.fileShare.dataType = pb.FileShare.MISSING_INFO
                 elif request.fileShare.datatype == pb.FileShare.MISSING:
-                    missing_data.fileShare.dataType == pb.FileShare.MISSING
+                    missing_data.fileShare.dataType = pb.FileShare.MISSING
                     missing_data.fileShare.missingPieces = request.fileShare.missingPieces
 
                 try:
@@ -124,10 +130,10 @@ def share_file(request, user):
                     logging.info(f"File message with type {missing_data.fileShare.dataType} sent to {host.username}.")
                 except Exception as e:
                     logging.warning(f"Error sending file message to {host.username}: {e}")
-    else :
+    else:
         with rooms_lock:
             if current_room.is_video_name_assigned():
-                host = room.get_host()
+                host = current_room.get_host()
 
                 file_request = pb.RequestData()
                 file_request.dataType = pb.RequestData.FILE_SHARE
