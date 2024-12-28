@@ -105,7 +105,6 @@ public:
         createButton->Bind(wxEVT_BUTTON, &MainFrame::OnCreate, this);
         joinButton->Bind(wxEVT_BUTTON, &MainFrame::OnJoin, this);
         sendButton->Bind(wxEVT_BUTTON, &MainFrame::OnSendMessage, this);
-
     }
 
 private:
@@ -158,6 +157,7 @@ private:
 class App : public wxApp {
 public:
     virtual bool OnInit() {
+        wxMessageBox("App is opened", "Debug Info", wxOK | wxICON_INFORMATION);
         MainFrame* frame = new MainFrame();
         frame->Show(true);
         return true;

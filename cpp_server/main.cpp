@@ -190,6 +190,8 @@ int main(int argc, char *argv[]) {
     try {
 
         int port = 5000;
+        std::cout << "Enter port:\n";
+        std::cin >> port;
 
         asio::io_context io_context;
         asio::ip::tcp::acceptor acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
