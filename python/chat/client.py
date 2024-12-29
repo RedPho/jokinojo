@@ -49,13 +49,17 @@ def handle_response(raw_data):
             print(f"Ready to play video: {room.video_name}")
         elif response_type == network_pb2.ResponseData.CHAT:
             print(f"Chat message received: {response.chatMessage}")
-        elif response_type == network_pb2.ResponseData.ERROR:
-            print(f"Error from server: {response.errorMessage}")
         elif response_type == network_pb2.ResponseData.SYNC:
             with room_lock:
-                room.current_time = response.currentTime  # Sunucudan gelen mevcut zaman bilgisini saklıyoruz.
-                room.is_playing = response.isPlaying  # Oynatma durumunu güncelliyoruz.
-            print(f"Video synced: Current time is {room.current_time}, is playing: {room.is_playing}")
+                room.time_position = response.timePosition  # Sunucudan gelen mevcut zaman bilgisini saklıyoruz.
+                room.resumed = response.resumed  # Oynatma durumunu güncelliyoruz.
+            print(f"Video synced: Current time is {room.time_position}, is playing: {room.resumed}")
+        elif response_type == network_pb2.ResponseData.videoName:
+            print(f"Video name: {response.videoName}")
+
+        elif response_type == network_pb2.ResponseData.ERROR:
+            print(f"Error from server: {response.errorMessage}")
+
 
         else:
             print("Unknown response type received.")
@@ -67,7 +71,7 @@ def send_messages(client_socket, username):
     global room
     while True:
         try:
-            choice = input("Choose an action: [1] Create Room, [2] Join Room, [3] Leave Room, [4] Quit, [5] Chat: , [6] Send Time: ")
+            choice = input("Choose an action: [1] Create Room, [2] Join Room, [3] Leave Room, [4] Quit, [5] Chat: , [6] Send Time: , [7] Video Name: " )
             if choice == '1':
                 request = network_pb2.RequestData()
                 request.dataType = network_pb2.RequestData.CREATE_ROOM
@@ -115,6 +119,15 @@ def send_messages(client_socket, username):
                 request.resumed = room.resumed  # Host'un oynatma durumu
                 client_socket.send(request.SerializeToString())
                 print("Current time sent.")
+            elif choice == '7':
+                video_name = input("Enter video name: ")
+                request = network_pb2.RequestData()
+                request.dataType = network_pb2.RequestData.VIDEO_NAME
+                request.roomId = room.room_id
+                request.videoName = video_name  # Host'un video ismi
+                client_socket.send(request.SerializeToString())
+                print("Video name sent.")
+
 
 
             else:

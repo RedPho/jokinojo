@@ -62,6 +62,8 @@ def handle_request(raw_data, user):
         return chat(request, user)
     elif request_type == pb.RequestData.SYNC:
         return sync(request, user)
+    elif request_type == pb.RequestData.VIDEO_NAME:
+        return video_name(request, user)
     else:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.ERROR
@@ -124,9 +126,6 @@ def sync(request, user):
                 target_room = room
                 break
 
-        print()
-        print("a")
-
         if not target_room:
             response = pb.ResponseData()
             response.dataType = pb.ResponseData.ERROR
@@ -164,6 +163,45 @@ def sync(request, user):
         # Sync işlemini gerçekleştiren kullanıcıya yanıt döndür
         return response
 
+def video_name(request, user):
+    user.username = request.username
+    video_name = request.videoName
+    room_id = request.roomId
+
+    with rooms_lock:
+        # Find the room by its ID
+        target_room = None
+        for room in rooms:
+            if room.room_id == room_id:
+                target_room = room
+                break
+
+        if not target_room:
+            # If the room does not exist, return an error response
+            response = pb.ResponseData()
+            response.dataType = pb.ResponseData.ERROR
+            response.errorMessage = f"Room with ID {room_id} not found."
+            logging.warning(f"Setting video name failed: Room {room_id} not found.")
+            return response
+
+        # Set the video name for the room
+        target_room.video_name = video_name
+        logging.info(f"Room {room_id} video name set to '{video_name}' by {user.username}.")
+
+        # Notify all users in the room about the new video name
+        response = pb.ResponseData()
+        response.dataType = pb.ResponseData.VIDEO_NAME
+        response.videoName = video_name
+
+        for current_user in target_room.users:
+            try:
+                current_user.socket.send(response.SerializeToString())
+                logging.info(f"Video name '{video_name}' sent to {current_user.username}.")
+            except Exception as e:
+                logging.warning(f"Failed to send video name to {current_user.username}: {e}")
+
+        # Respond to the user who set the video name
+        return response
 
 def ready(request, user):
     user.username = request.username
