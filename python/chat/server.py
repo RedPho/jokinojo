@@ -142,7 +142,6 @@ def sync(request, user):
             logging.warning(f"Sync failed: Room {room_id} is not ready.")
             return response
 
-        target_room.time_position = time_position
         logging.info(f"Syncing room {room_id} with current_time={time_position}, is_playing={resumed}")
 
         # Oda bulunursa, senkronizasyon bilgilerini tüm kullanıcılara yayınla
