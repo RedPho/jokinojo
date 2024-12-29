@@ -14,6 +14,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 def handle_client(user: User):
     while True:
         try:
+            ###
+            ###    BUNU DUZELT 1024 YERINE BASINA MESAJ BOYUTU EKLE
+            ###
+
             message = user.socket.recv(1024)
             if not message:
                 logging.info(f"{user.username} disconnected (empty message).")
@@ -23,6 +27,10 @@ def handle_client(user: User):
             response = handle_request(message, user)
 
             try:
+                ###
+                ###    BUNU DUZELT BASINA MESAJ BOYUTU EKLE
+                ###
+
                 user.socket.send(response.SerializeToString())
                 logging.info(f"Response sent to {user.username}.")
             except Exception as e:

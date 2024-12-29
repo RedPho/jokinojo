@@ -9,6 +9,11 @@ from room import Room
 
 CHUNK_SIZE = 1024 * 1024 * 4 # 4 MB
 chosen_file_path = None  # Define at the module level
+received_chunks = {}
+file_name = None
+file_size = 0
+file_hash = None
+is_host = False
 room = Room()  # Shared room instance
 room_lock = threading.Lock()  # Lock for thread safety
 
@@ -16,6 +21,12 @@ room_lock = threading.Lock()  # Lock for thread safety
 def receive_messages(client_socket):
     while True:
         try:
+
+            ###
+            ###    BUNU DUZELT 1024 YERINE BASINA MESAJ BOYUTU EKLE
+            ###
+
+
             data = client_socket.recv(1024)
             if not data:
                 print("Disconnected from the server.")
@@ -63,7 +74,9 @@ def handle_response(raw_data):
                 room.current_time = response.currentTime  # Sunucudan gelen mevcut zaman bilgisini saklıyoruz.
                 room.is_playing = response.isPlaying  # Oynatma durumunu güncelliyoruz.
             print(f"Video synced: Current time is {room.current_time}, is playing: {room.is_playing}")
-
+        elif response_type == network_pb2.ResponseData.FileShare:
+            ### burayi da yazmayi unutma
+            print(22)
         else:
             print("Unknown response type received.")
     except Exception as e:
@@ -180,6 +193,8 @@ def calculate_hash(file_path):
             hasher.update(chunk)
     ##hesaplama yapılır ve döndürülür
     return hasher.hexdigest()
+
+## Dosya alma parcalari birlestirme ve ve eksik dosyalarin tekrar istenmesini yap
 
 def send_file(client_socket, username):
     global chosen_file_path
