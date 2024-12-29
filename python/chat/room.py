@@ -1,4 +1,3 @@
-from chat.server import users
 from user import User
 
 class Room:
@@ -24,7 +23,7 @@ class Room:
         self.host = User
 
     def get_user_by_name(self, name):
-        for user in users:
+        for user in self.users:
             if user.username == name:
                 return user
 

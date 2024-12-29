@@ -1,9 +1,14 @@
 import socket
 import threading
 import time
+import hashlib
+import os
 import network_pb2  # Import the generated protobuf classes
 from room import Room
 
+
+CHUNK_SIZE = 1024 * 1024 * 4 # 4 MB
+chosen_file_path = None  # Define at the module level
 room = Room()  # Shared room instance
 room_lock = threading.Lock()  # Lock for thread safety
 
@@ -51,6 +56,8 @@ def handle_response(raw_data):
             print(f"Chat message received: {response.chatMessage}")
         elif response_type == network_pb2.ResponseData.ERROR:
             print(f"Error from server: {response.errorMessage}")
+        elif response_type == network_pb2.ResponseData.VIDEO_NAME:
+            print("Video name has assigned")
         elif response_type == network_pb2.ResponseData.SYNC:
             with room_lock:
                 room.current_time = response.currentTime  # Sunucudan gelen mevcut zaman bilgisini saklıyoruz.
@@ -67,7 +74,7 @@ def send_messages(client_socket, username):
     global room
     while True:
         try:
-            choice = input("Choose an action: [1] Create Room, [2] Join Room, [3] Leave Room, [4] Quit, [5] Chat: , [6] Send Time: ")
+            choice = input("Choose an action: [1] Create Room, [2] Join Room, [3] Leave Room, [4] Quit, [5] Chat: , [6] Send Time: [7] Assign Video Name: [8] Download File")
             if choice == '1':
                 request = network_pb2.RequestData()
                 request.dataType = network_pb2.RequestData.CREATE_ROOM
@@ -115,7 +122,30 @@ def send_messages(client_socket, username):
                 request.resumed = room.resumed  # Host'un oynatma durumu
                 client_socket.send(request.SerializeToString())
                 print("Current time sent.")
-
+            elif choice == '7':
+                files = os.listdir('.')
+                for idx, file in enumerate(files):
+                    print(f"{idx + 1}: {file}")
+                file_choice = int(input("Enter the number of the file you want to choose: "))
+                if 1 <= file_choice <= len(files):
+                    chosen_file = files[file_choice - 1]
+                    global chosen_file_path
+                    chosen_file_path = os.path.join(os.getcwd(), chosen_file)
+                    print(f"You chose: {chosen_file}")
+                    request = network_pb2.RequestData()
+                    request.dataType = network_pb2.RequestData.VIDEO_NAME
+                    request.roomId = room.room_id
+                    request.videoName = chosen_file
+                    client_socket.send(request.SerializeToString())
+                    print("Video name sent.")
+                else:
+                    print("Invalid choice.")
+            elif choice == '8':
+                request = network_pb2.RequestData()
+                request.dataType = network_pb2.RequestData.FILE_SHARE
+                request.roomId = room.room_id
+                client_socket.send(request.SerializeToString())
+                print("File share request sent")
 
             else:
                 print("Invalid choice. Please select a valid option.")
@@ -124,6 +154,75 @@ def send_messages(client_socket, username):
             print(f"Error sending request: {e}")
             client_socket.close()
             break
+
+def divide_file_into_chunks(file_path):
+    ## dosyayı binary olarak okumaya başlar
+    with open(file_path, "rb") as f:
+        index = 0
+        while chunk := f.read(CHUNK_SIZE):
+            yield index, chunk
+            index += 1
+
+def assemble_file(output_dir, file_name, received_chunks):
+    output_file_path = os.path.join(output_dir, file_name)
+    total_size = 0
+    with open(output_file_path, "wb") as f:
+        for index in sorted(received_chunks.keys()):
+            chunk_data = received_chunks[index]
+            f.write(chunk_data)
+            total_size += len(chunk_data)
+
+def calculate_hash(file_path):
+    hasher = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        ## dosyayı parça parça okur hash objesi lan hashera ekler
+        while chunk := f.read(CHUNK_SIZE):
+            hasher.update(chunk)
+    ##hesaplama yapılır ve döndürülür
+    return hasher.hexdigest()
+
+def send_file(client_socket, username):
+    global chosen_file_path
+
+    ## Once file info gönderilir
+    file_info = network_pb2.RequestData()
+    file_info.dataType = network_pb2.FILE_SHARE
+
+    ## Request icinde ayrica file share objesi olusturup dosya ile
+    ## ilgili bilgileri oraya ekledim
+    file_info_message = network_pb2.FileShare()
+    file_info_message.datatype = network_pb2.FileShare.FILE_INFO
+    file_info_message.fileName = os.path.basename(chosen_file_path)
+    file_info_message.fileSize = os.path.getsize(chosen_file_path)
+    file_info_message.hash = calculate_hash(chosen_file_path)
+
+    ## file share objesini daha sonra request objesi icine ekledim
+    file_info.fileShare = file_info_message
+    client_socket.send(file_info.SerializeToString())
+
+    ## Sonra dosya chunk chunk gönderilir
+    for index, chunk in divide_file_into_chunks(chosen_file_path):
+        file_piece = network_pb2.RequestData()
+        file_piece.dataType = network_pb2.FILE_SHARE
+
+        file_piece_message = network_pb2.FileShare()
+        file_piece_message.datatype = network_pb2.FileShare.PIECE
+        file_piece_message.pieceIndex = index
+        file_piece_message.pieceData = chunk
+
+        file_piece.fileShare = file_piece_message
+        client_socket.send(file_piece.SerializeToString())
+
+    file_finished = network_pb2.RequestData()
+    file_finished.dataType = network_pb2.FILE_SHARE
+
+    file_finished_message = network_pb2.FileShare()
+    file_finished_message.datatype = network_pb2.FileShare.FINISHED
+
+    file_finished.fileShare = file_finished_message
+    client_socket.send(file_finished.SerializeToString())
+
+
 
 # Function to connect to the server
 def connect_server(host, port):

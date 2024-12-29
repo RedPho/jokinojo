@@ -64,11 +64,32 @@ def handle_request(raw_data, user):
         return sync(request, user)
     elif request_type == pb.RequestData.FILE_SHARE:
         return share_file(request, user)
+    elif request_type == pb.RequestData.VIDEO_NAME:
+        return video_name(request, user)
     else:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.ERROR
         response.errorMessage = "Unknown request type."
         return response
+
+def video_name(request, user):
+    room_id = request.roomId
+    current_room = None
+    with rooms_lock:
+        for room in rooms:
+            if room.room_id == room_id:
+                current_room = room
+                break
+    if current_room is None:
+        response = pb.ResponseData()
+        response.dataType = pb.ResponseData.ERROR
+        response.errorMessage = "Room not found."
+        return response
+
+    current_room.video_name = request.videoName
+    response = pb.ResponseData()
+    response.dataType = pb.ResponseData.VIDEO_NAME
+    return response
 
 def share_file(request, user):
     room_id = request.roomId
