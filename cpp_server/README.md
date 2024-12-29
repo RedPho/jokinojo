@@ -1,7 +1,7 @@
 # JoKinoJo
 
 ## Overview
-**JoKinoJo** is a media player that synchronises media playback with your friends.
+**JoKinoJo** is a media player that synchronises media playback with your friends. This is the server.
 
 ## Prerequisites
 
@@ -9,11 +9,8 @@
 2. **C++ Compiler** supporting C++20.
 3. Libraries:
    - [Protobuf](https://github.com/protocolbuffers/protobuf)
-   - [wxWidgets](https://www.wxwidgets.org/)
-   - [MPV](https://mpv.io/)
    - [Asio](https://think-async.com/Asio/)
    - [abseil-cpp](https://github.com/abseil/abseil-cpp)(protobuf requires this)
-   - [pkg-config](https://gitlab.freedesktop.org/pkg-config/pkg-config)
    - In windows, this project uses vcpkg, in linux, it doesn't.
 
 
@@ -33,26 +30,12 @@
 2. Run the bootstrap-vcpkg.bat file in the vcpkg folder.  
 3. Install these libraries with vcpkg( vcpkg.exe install library_name ):
    - [protobuf](https://github.com/protocolbuffers/protobuf)  
-   - [wxwidgets](https://www.wxwidgets.org/)  
-   - [abseil](https://github.com/abseil/abseil-cpp)(protobuf requires this)  
+   - [abseil](https://github.com/abseil/abseil-cpp)  
 
-vcpkg doesn't have libmpv so I included the binarires in the project. You don't need to install it.  
-
-#### Linux and MacOS:
+#### Linux:
 1. install these libraries using your package manager:
    - [Protobuf](https://github.com/protocolbuffers/protobuf)
-   - [wxWidgets](https://www.wxwidgets.org/)
-   - [MPV](https://mpv.io/)
-   - [abseil-cpp or abseil](https://github.com/abseil/abseil-cpp)(protobuf requires this)
-   - [pkg-config](https://gitlab.freedesktop.org/pkg-config/pkg-config)
-
-Examples:  
-```bash
-sudo pacman -S protobuf wxwidgets abseil-cpp pkg-config mpv
-```
-```bash
-brew install protobuf  wxwidgets abseil pkg-config mpv
-```
+   - [abseil-cpp](https://github.com/abseil/abseil-cpp)(protobuf requires this)
 
 ### Step 3: Build the Application
 1. Create a build directory and cd into it.  
@@ -65,9 +48,9 @@ cmake ..
 cmake --build . --config release
 ```
 
-### Step 4: Dll files. This step is only needed for Windows
+### Step 4: Only needed for Windows
 
-1. Copy [the dll files](https://drive.google.com/drive/folders/1jd8ORURZGhzE2OkEgW9bQzGbAZZx7Ig2?usp=sharing) to the build folder  
+1. Copy the dll files I included(from the release_dlls folder) to the build folder  
 
 ### Step 5: Run the Application
 1. Execute the generated binary:

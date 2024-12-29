@@ -1,38 +1,49 @@
 cmake_minimum_required(VERSION 3.27)
 project(JoKinoJo)
-
 set(CMAKE_CXX_STANDARD 20)
 
-if (NOT WIN32)
+if (APPLE)
+    # macOS specific configuration
     find_package(Protobuf REQUIRED)
-    find_package(PkgConfig REQUIRED)
-else()
+    
+    # On macOS, you might want to use brew-installed libraries
+    include_directories(/usr/local/include)
+    link_directories(/usr/local/lib)
+elseif (WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00) # Windows 10
     # On Windows, let vcpkg handle finding dependencies
-    set(CMAKE_TOOLCHAIN_FILE "C:/Users/emin/vcpkg/scripts/buildsystems/vcpkg.cmake")
-    set(CMAKE_PREFIX_PATH "C:/Users/emin/vcpkg/installed/x64-windows/share" ${CMAKE_PREFIX_PATH})
-
-
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/libraries/vcpkg/scripts/buildsystems/vcpkg.cmake")
+    set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/libraries/vcpkg/installed/x64-windows/share" ${CMAKE_PREFIX_PATH})
     find_package(Protobuf CONFIG REQUIRED)
-    set(Protobuf_LIBRARIES "C:/Users/emin/vcpkg/installed/x64-windows/lib/libprotobuf.lib")
+    set(Protobuf_LIBRARIES "${CMAKE_SOURCE_DIR}/libraries/vcpkg/installed/x64-windows/lib/libprotobuf.lib")
     find_package(absl CONFIG REQUIRED)
-
-    include_directories("C:/Program Files (x86)/Libmpv/include")  # Adjust this path
-    set(MPV_LIBRARIES "C:/Program Files (x86)/Libmpv/libmpv.dll.a")  # Adjust this path
-
+else()
+    # Linux configuration
+    find_package(Protobuf REQUIRED)
 endif()
 
-include_directories(${Protobuf_INCLUDE_DIRS})
-include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/libraries/asio/include)
+if(wxWidgets_USE_FILE)
+    include(${wxWidgets_USE_FILE})
+endif()
 
+include_directories(${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/libraries/asio/include
+    ${Protobuf_INCLUDE_DIRS}
+)
+
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS network.proto)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 if (WIN32)
-    add_executable(JoKinoJo
+    add_executable(JoKinoJo WIN32
         main.cpp
-        network.pb.cc
+        ${PROTO_SRCS}
+        ${PROTO_HDRS}
     )
     target_link_libraries(JoKinoJo
         ${Protobuf_LIBRARIES}
+        ${wxWidgets_LIBRARIES}
+        ${MPV_LIBRARIES}
         absl::base
         absl::log
         absl::strings
@@ -42,10 +53,10 @@ if (WIN32)
 else()
     add_executable(JoKinoJo
         main.cpp
-        network.pb.cc
+        ${PROTO_SRCS}
+        ${PROTO_HDRS}
     )
-
-    target_link_libraries(JoKinoJo 
+    target_link_libraries(JoKinoJo
         ${Protobuf_LIBRARIES}
         absl_log_internal_check_op
         absl_log_internal_message
