@@ -70,7 +70,7 @@ bool Networker::requestJoinRoom(int roomId, std::string username) {
     networkData.set_roomid(roomId);
     networkData.set_username(username);
 
-    serializeAndSendData(networkData);
+    return serializeAndSendData(networkData);
 }
 
 
@@ -81,7 +81,7 @@ bool Networker::requestCreateRoom(std::string username) {
     networkData.set_datatype(jokinojo::RequestData_DataType_CREATE_ROOM);
     networkData.set_username(username);
 
-    serializeAndSendData(networkData);
+    return serializeAndSendData(networkData);
 
 }
 
@@ -92,7 +92,7 @@ bool Networker::sendMediaStatus(int timePosition, bool isPaused) {
     networkData.set_timeposition(timePosition); // miliseconds
     networkData.set_resumed(!isPaused);
 
-    serializeAndSendData(networkData);
+    return serializeAndSendData(networkData);
 }
 
 bool Networker::sendFileName(std::string fileName) {

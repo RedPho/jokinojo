@@ -11,6 +11,7 @@ public:
             wxTheApp->CallAfter([this, data]() {
                 switch (data.datatype()){
                     case jokinojo::ResponseData_DataType_CREATE_ROOM:
+                        inRoom = true;
                         wxMessageBox(wxString::Format(wxT("Room id is %i"),data.roomid()), "Incoming Data", wxOK | wxICON_INFORMATION, this);
                         isHost = true;
                         mediaPlayer->setIsHost(isHost);
@@ -20,16 +21,21 @@ public:
                         }
                         break;
                     case jokinojo::ResponseData_DataType_JOIN_ROOM:
-                        isHost = false;
-                        mediaPlayer->setIsHost(isHost);
-                        chatDisplay->AppendText("Connected\n");
-                        chatDisplay->AppendText("Users in room:\n");
-                        for (const std::string& username: data.usernames()) {
-                            chatDisplay->AppendText(username + "\n");
-                        }
-                        {
-                            std::thread mediaActionsHandlerThread(&MediaPlayer::handleMediaActions, mediaPlayer);
-                            mediaActionsHandlerThread.detach();
+                        if (inRoom) {
+                            chatDisplay->AppendText(data.username() + " is Connected\n");
+                        } else {
+                            inRoom = true;
+                            isHost = false;
+                            mediaPlayer->setIsHost(isHost);
+                            chatDisplay->AppendText("Connected\n");
+                            chatDisplay->AppendText("Users in room:\n");
+                            for (const std::string &username: data.usernames()) {
+                                chatDisplay->AppendText(username + "\n");
+                            }
+                            {
+                                std::thread mediaActionsHandlerThread(&MediaPlayer::handleMediaActions, mediaPlayer);
+                                mediaActionsHandlerThread.detach();
+                            }
                         }
                         break;
                     case jokinojo::ResponseData_DataType_USER_LEFT:
@@ -37,7 +43,9 @@ public:
                         chatDisplay->AppendText(data.username() + " left\n");
                         break;
                     case jokinojo::ResponseData_DataType_SYNC:
-                        mediaPlayer->setMediaStatus(!data.resumed(), data.timeposition());
+                        if (!isHost) {
+                            mediaPlayer->setMediaStatus(!data.resumed(), data.timeposition());
+                        }
                         chatDisplay->AppendText("Synchronized\n");
                         break;
                     case jokinojo::ResponseData_DataType_VIDEO_NAME:
@@ -97,7 +105,6 @@ public:
         createButton->Bind(wxEVT_BUTTON, &MainFrame::OnCreate, this);
         joinButton->Bind(wxEVT_BUTTON, &MainFrame::OnJoin, this);
         sendButton->Bind(wxEVT_BUTTON, &MainFrame::OnSendMessage, this);
-
     }
 
 private:
@@ -110,6 +117,7 @@ private:
     wxTextCtrl* chatDisplay;
     wxTextCtrl* chatInput;
     wxButton* sendButton;
+    bool inRoom{false};
     Networker& networker = Networker::get_instance();
     MediaPlayer* mediaPlayer = new MediaPlayer();
 
@@ -149,6 +157,7 @@ private:
 class App : public wxApp {
 public:
     virtual bool OnInit() {
+        wxMessageBox("App is opened", "Debug Info", wxOK | wxICON_INFORMATION);
         MainFrame* frame = new MainFrame();
         frame->Show(true);
         return true;
