@@ -39,6 +39,7 @@ def handle_response(raw_data):
                 room.video_name = response.videoName
             print(f"Joined the room. Users: {room.users}")
             print(f"Current video name: {room.video_name}")
+            print(f"Current time position: {room.time_position}")
         elif response_type == network_pb2.ResponseData.USER_LEFT:
             with room_lock:
                 room.users = list(response.usernames)
@@ -56,7 +57,6 @@ def handle_response(raw_data):
             print(f"Video synced: Current time is {room.time_position}, is playing: {room.resumed}")
         elif response_type == network_pb2.ResponseData.videoName:
             print(f"Video name: {response.videoName}")
-
         elif response_type == network_pb2.ResponseData.ERROR:
             print(f"Error from server: {response.errorMessage}")
 

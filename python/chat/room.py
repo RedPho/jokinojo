@@ -7,9 +7,9 @@ class Room:
         self.room_id = Room._id_counter
         self.video_name = ""
         self.users = []
-        self.ready = False
+        self.ready = True
         self.chat_messages = []
-        self.time_position = 0.0
+        self.time_position = 0
         self.resumed = False
 
         

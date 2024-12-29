@@ -103,6 +103,7 @@ def join_room(request, user):
         response.dataType = pb.ResponseData.JOIN_ROOM
         response.usernames.extend([u.username for u in room.users])
         response.videoName = room.video_name
+        response.timePosition = room.time_position
         return response
     else:
         response = pb.ResponseData()
@@ -141,13 +142,16 @@ def sync(request, user):
             logging.warning(f"Sync failed: Room {room_id} is not ready.")
             return response
 
+        target_room.time_position = time_position
+        logging.info(f"Syncing room {room_id} with current_time={time_position}, is_playing={resumed}")
+
         # Oda bulunursa, senkronizasyon bilgilerini tüm kullanıcılara yayınla
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.SYNC
         response.timePosition = time_position
         response.resumed = resumed
 
-        logging.info(f"Syncing room {room_id} with current_time={time_position}, is_playing={resumed}")
+
 
         # Odaya bağlı tüm kullanıcılara senkronizasyon bilgilerini gönder
         for current_user in target_room.users:
