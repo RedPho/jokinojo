@@ -242,29 +242,12 @@ def chat(request, user):
             if room.room_id == room_id:
                 # Mesajı odaya ekle
                 room.add_chat_message(f"{user.username}: {chat_message}")
-                
-                # Odadaki diğer kullanıcılara mesajı gönder
-                for current_user in room.users:
-                    if current_user == user:
-                        continue
 
-                    response = pb.ResponseData()
-                    response.dataType = pb.ResponseData.CHAT
-                    ##mesaj nerede gönderildi
-                    ##sadece gönderen kullanıcının username göndersek yeterli olur
-                    response.usernames.extend([f"{user.username}: {chat_message}"])
-
-                    try:
-                        current_user.socket.send(response.SerializeToString())
-                        logging.info(f"Chat mesajı {current_user.username} kullanıcısına iletildi")
-                    except Exception as e:
-                        logging.warning(f"{current_user.username} kullanıcısına mesaj gönderilemedi: {e}")
-                
-                # Gönderen kullanıcıya yanıt
                 response = pb.ResponseData()
                 response.dataType = pb.ResponseData.CHAT
-                ##sadece başarılı göndwerildiği için chat geri döndürsek yeter bence usernames gerek var mı
-                response.usernames.extend([f"{user.username}: {chat_message}"])
+                response.username = user.username
+                response.chatMessage = chat_message
+                broadcast(room, user, response)
                 return response
 
     # Oda bulunamadıysa hata döndür
@@ -291,6 +274,17 @@ def send_new_userlist_to_current_users(room, user, flag):
         except Exception as e:
             logging.warning(f"Failed to send user list to {current_user.username}: {e}")
 
+def broadcast(room, user, response):
+    for current_user in room.users:
+        if current_user == user:
+            continue
+
+        try:
+            current_user.socket.send(response.SerializeToString())
+        except Exception as e:
+            logging.warning(f": {e}")
+
+            
 def user_left(request, user):
     logging.info(f"Quit request received from {user.username}.")
     room_id = request.roomId
