@@ -82,6 +82,13 @@ def handle_response(raw_data):
     except Exception as e:
         print(f"Error handling response: {e}")
 
+def receive_with_length(client_socket)
+
+def send_with_length(client_socket, message):
+    message_length = len(message)
+    client_socket.sendall(message_length.to_bytes(4, byteorder='big') + message)
+
+
 # Function to handle sending messages
 def send_messages(client_socket, username):
     global room
