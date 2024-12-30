@@ -74,6 +74,7 @@ def create_room(request, user):
     user.username = request.username
     room = Room()
     room.add_user(user)
+    user.room = room
 
     with rooms_lock:
         rooms.append(room)
@@ -95,6 +96,7 @@ def join_room(request, user):
                 is_room_exist = True
                 if user not in room.users:
                     room.add_user(user)
+                    user.room = room
                     logging.info(f"{user.username} joined room {room_id}.")
                     send_new_userlist_to_current_users(room, user, pb.ResponseData.JOIN_ROOM)
 

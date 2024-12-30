@@ -4,6 +4,7 @@ class User:
         User._id_counter += 1
         self.user_id = User._id_counter
         self.username = username
+        self.room = None
         self.socket = client_socket
         self.ready = False
 
