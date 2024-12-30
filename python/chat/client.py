@@ -55,7 +55,8 @@ def handle_response(raw_data):
                 room.time_position = response.timePosition  # Sunucudan gelen mevcut zaman bilgisini saklıyoruz.
                 room.resumed = response.resumed  # Oynatma durumunu güncelliyoruz.
             print(f"Video synced: Current time is {room.time_position}, is playing: {room.resumed}")
-        elif response_type == network_pb2.ResponseData.videoName:
+        elif response_type == network_pb2.ResponseData.VIDEO_NAME:
+            print(f"Debug: Received VIDEO_NAME response with videoName: {response.videoName}")
             print(f"Video name: {response.videoName}")
         elif response_type == network_pb2.ResponseData.ERROR:
             print(f"Error from server: {response.errorMessage}")

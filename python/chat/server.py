@@ -1,6 +1,8 @@
 import socket
 import threading
 import logging
+from http.client import responses
+
 import network_pb2 as pb
 from user import User
 from room import Room
@@ -64,6 +66,8 @@ def handle_request(raw_data, user):
         return sync(request, user)
     elif request_type == pb.RequestData.VIDEO_NAME:
         return video_name(request, user)
+    elif request_type == pb.RequestData.QUIT:
+        return user_left(request, user)
     else:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.ERROR
@@ -98,12 +102,12 @@ def join_room(request, user):
                     room.add_user(user)
                     user.room = room
                     logging.info(f"{user.username} joined room {room_id}.")
-                    send_new_userlist_to_current_users(room, user, pb.ResponseData.JOIN_ROOM)
 
     if is_room_exist:
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.JOIN_ROOM
-        response.usernames.extend([u.username for u in room.users])
+        response.username = user.username
+        broadcast(room, user, response)
         response.videoName = room.video_name
         response.timePosition = room.time_position
         return response
@@ -119,21 +123,15 @@ def sync(request, user):
     user.username = request.username
     time_position = request.timePosition
     resumed = request.resumed
-    room_id = request.roomId
+    target_room = user.room
 
     with rooms_lock:
-        # İlgili oda kontrolü
-        target_room = None
-        for room in rooms:
-            if room.room_id == room_id:
-                target_room = room
-                break
 
         if not target_room:
             response = pb.ResponseData()
             response.dataType = pb.ResponseData.ERROR
-            response.errorMessage = f"Room with ID {room_id} not found."
-            logging.warning(f"Sync failed: Room {room_id} not found.")
+            response.errorMessage = f"Room with ID {target_room.room_id} not found."
+            logging.warning(f"Sync failed: Room {target_room.room_id} not found.")
             return response
 
             # Oda hazır değilse hata döndür
@@ -141,116 +139,82 @@ def sync(request, user):
             response = pb.ResponseData()
             response.dataType = pb.ResponseData.ERROR
             response.errorMessage = "Room is not ready for sync."
-            logging.warning(f"Sync failed: Room {room_id} is not ready.")
+            logging.warning(f"Sync failed: Room {target_room.room_id} is not ready.")
             return response
 
-        logging.info(f"Syncing room {room_id} with current_time={time_position}, is_playing={resumed}")
-
-        # Oda bulunursa, senkronizasyon bilgilerini tüm kullanıcılara yayınla
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.SYNC
-        response.timePosition = time_position
-        response.resumed = resumed
+        response.timePosition = request.timePosition
+        response.resumed = request.resumed
+        broadcast(target_room, user, response)
 
-
-
-        # Odaya bağlı tüm kullanıcılara senkronizasyon bilgilerini gönder
-        for current_user in target_room.users:
-            if current_user == user:
-                continue
-            else:
-                try:
-                    current_user.socket.send(response.SerializeToString())
-                    logging.info(f"Sync info sent to {current_user.username}.")
-                except Exception as e:
-                    logging.warning(f"Failed to send sync info to {current_user.username}: {e}")
-
+        logging.info(f"Syncing room {target_room.room_id} with current_time={time_position}, is_playing={resumed}")
         # Sync işlemini gerçekleştiren kullanıcıya yanıt döndür
         return response
 
 def video_name(request, user):
     user.username = request.username
+    user.ready = True
     video_name = request.videoName
-    room_id = request.roomId
+    target_room = user.room
 
     with rooms_lock:
-        # Find the room by its ID
-        target_room = None
-        for room in rooms:
-            if room.room_id == room_id:
-                target_room = room
-                break
-
         if not target_room:
             # If the room does not exist, return an error response
             response = pb.ResponseData()
             response.dataType = pb.ResponseData.ERROR
-            response.errorMessage = f"Room with ID {room_id} not found."
-            logging.warning(f"Setting video name failed: Room {room_id} not found.")
+            response.errorMessage = "Room not found."
+            logging.warning(f"Setting video name failed: Room not found.")
             return response
 
         # Set the video name for the room
         target_room.video_name = video_name
-        logging.info(f"Room {room_id} video name set to '{video_name}' by {user.username}.")
+        logging.info(f"Room {target_room.room_id} video name set to '{video_name}' by {user.username}.")
 
         # Notify all users in the room about the new video name
         response = pb.ResponseData()
         response.dataType = pb.ResponseData.VIDEO_NAME
         response.videoName = video_name
 
-        for current_user in target_room.users:
-            try:
-                current_user.socket.send(response.SerializeToString())
-                logging.info(f"Video name '{video_name}' sent to {current_user.username}.")
-            except Exception as e:
-                logging.warning(f"Failed to send video name to {current_user.username}: {e}")
+        broadcast(target_room, user, response)
 
         # Respond to the user who set the video name
         return response
 
+
 def ready(request, user):
-    user.username = request.username
     user.ready = True
-    ## not ready durumu da olmalı mı?
-    room_id = request.roomId
-    
+
+    target_room = user.room
+
     with rooms_lock:
-        for room in rooms:
-            if room.room_id == room_id:
-                # Diğer kullanıcılara ready durumunu bildir
-                ##sadece ready olan kullanıcı da gönderilebilir
-                send_new_userlist_to_current_users(room, user, pb.ResponseData.READY)
-                
-                response = pb.ResponseData()
-                response.dataType = pb.ResponseData.READY
-                ##sadece ready olan kullanıcılar döndürmek yeterli olur
-                response.usernames.extend([f"{u.username}:{u.ready}" for u in room.users])
-                response.ready = user.ready
-                return response
+        if target_room:
+
+            response = pb.ResponseData()
+            response.dataType = pb.ResponseData.READY
+            response.username = user.username
+            broadcast(target_room, user, response)
+            return response
 
     response = pb.ResponseData()
     response.dataType = pb.ResponseData.ERROR
     response.errorMessage = "Room not found"
-    logging.warning(f"Room {room_id} not found.")
+    logging.warning("Room not found.")
     return response
 
 def chat(request, user):
-    user.username = request.username
-    room_id = request.roomId
     chat_message = request.chatMessage
 
     with rooms_lock:
-        for room in rooms:
-            if room.room_id == room_id:
-                # Mesajı odaya ekle
-                room.add_chat_message(f"{user.username}: {chat_message}")
+        target_room = user.room
+        target_room.add_chat_message(f"{user.username}: {chat_message}")
 
-                response = pb.ResponseData()
-                response.dataType = pb.ResponseData.CHAT
-                response.username = user.username
-                response.chatMessage = chat_message
-                broadcast(room, user, response)
-                return response
+        response = pb.ResponseData()
+        response.dataType = pb.ResponseData.CHAT
+        response.username = user.username
+        response.chatMessage = chat_message
+        broadcast(target_room, user, response)
+        return response
 
     # Oda bulunamadıysa hata döndür
     response = pb.ResponseData()
@@ -289,31 +253,30 @@ def broadcast(room, user, response):
             
 def user_left(request, user):
     logging.info(f"Quit request received from {user.username}.")
-    room_id = request.roomId
 
     with rooms_lock:
-        for room in rooms:
-            if room.room_id == room_id:
-                if user in room.users:
-                    room.remove_user(user)
-                    if len(room.users) == 0:##odada kimse yoksa odayı sil
-                        rooms.remove(room)
-                        logging.info(f"Room with id:{room_id} has removed")
-                    else:
-                        send_new_userlist_to_current_users(room, user, pb.ResponseData.USER_LEFT)
-                if user in users:
-                    users.remove(user)
-                logging.info(f"{user.username} removed from room {room_id}.")
+        target_room = user.room
+        target_room.remove_user(user)
+        if len(target_room.users) == 0:##odada kimse yoksa odayı sil
+            rooms.remove(target_room)
+            logging.info(f"Room with id:{target_room.room_id} has removed")
+        else:
+            response = pb.ResponseData()
+            response.dataType = pb.ResponseData.USER_LEFT
+            response.username = user.username
+            broadcast(target_room, user, response)
+        if user in users:
+            users.remove(user)
+        logging.info(f"{user.username} removed from room {target_room.room_id}.")
+        try:
+            user.socket.close()
+            logging.info(f"Socket closed for {user.username}.")
+        except Exception as e:
+            logging.warning(f"Error closing socket for {user.username}: {e}")
 
-    try:
-        user.socket.close()
-        logging.info(f"Socket closed for {user.username}.")
-    except Exception as e:
-        logging.warning(f"Error closing socket for {user.username}: {e}")
-
-    response = pb.ResponseData()
-    response.dataType = pb.ResponseData.USER_LEFT
-    return response
+        response = pb.ResponseData()
+        response.dataType = pb.ResponseData.USER_LEFT
+        return response
 
 def cleanup_user(user):
     with rooms_lock:
