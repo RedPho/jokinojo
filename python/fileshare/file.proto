@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package jokinojo;
+
+// Dosya paylaşımı için mesaj yapısı
+message FileShare {
+  enum DataType {
+    NULL = 0;
+    FILE_INFO = 1;    // Dosya hakkında bilgi (adı, boyutu, hash)
+    PIECE = 2;        // Bir dosya parçası
+    MISSING = 3;      // Eksik parçaların bilgisi
+    MISSING_INFO = 4; // Dosya bilgisi eksikse
+    FINISHED = 5;     // Gönderim tamamlandı
+  }
+
+  DataType datatype = 1;          // Mesaj türü
+  optional string fileName = 2;   // Dosyanın adı (FILE_INFO için)
+  optional int64 fileSize = 3;    // Dosyanın boyutu (byte olarak)
+  optional string hash = 4;       // Dosyanın bütünlük kontrolü için hash (ör: SHA-256)
+
+  // Dosya parçaları için alanlar
+  optional int32 pieceIndex = 5;  // Parça numarası (PIECE için)
+  optional bytes pieceData = 6;   // Dosya parçası verisi (PIECE için)
+
+  // Eksik parçalar için alanlar
+  repeated int32 missingPieces = 7; // Eksik parça numaralarının listesi (MISSING için)
+}

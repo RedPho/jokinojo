@@ -39,14 +39,29 @@ def handle_response(raw_data):
                 room.video_name = response.videoName
             print(f"Joined the room. Users: {room.users}")
             print(f"Current video name: {room.video_name}")
+            print(f"Current time position: {room.time_position}")
         elif response_type == network_pb2.ResponseData.USER_LEFT:
             with room_lock:
                 room.users = list(response.usernames)
                 room.video_name = response.videoName
             print(f"User left the room. Current users: {room.users}")
             print(f"Current video name: {room.video_name}")
+        elif response_type == network_pb2.ResponseData.READY:
+            print(f"Ready to play video: {room.video_name}")
+        elif response_type == network_pb2.ResponseData.CHAT:
+            print(f"Chat message received: {response.chatMessage}")
+        elif response_type == network_pb2.ResponseData.SYNC:
+            with room_lock:
+                room.time_position = response.timePosition  # Sunucudan gelen mevcut zaman bilgisini saklıyoruz.
+                room.resumed = response.resumed  # Oynatma durumunu güncelliyoruz.
+            print(f"Video synced: Current time is {room.time_position}, is playing: {room.resumed}")
+        elif response_type == network_pb2.ResponseData.VIDEO_NAME:
+            print(f"Debug: Received VIDEO_NAME response with videoName: {response.videoName}")
+            print(f"Video name: {response.videoName}")
         elif response_type == network_pb2.ResponseData.ERROR:
             print(f"Error from server: {response.errorMessage}")
+
+
         else:
             print("Unknown response type received.")
     except Exception as e:
@@ -57,7 +72,7 @@ def send_messages(client_socket, username):
     global room
     while True:
         try:
-            choice = input("Choose an action: [1] Create Room, [2] Join Room, [3] Leave Room, [4] Quit: ")
+            choice = input("Choose an action: [1] Create Room, [2] Join Room, [3] Leave Room, [4] Quit, [5] Chat: , [6] Send Time: , [7] Video Name: " )
             if choice == '1':
                 request = network_pb2.RequestData()
                 request.dataType = network_pb2.RequestData.CREATE_ROOM
@@ -89,6 +104,33 @@ def send_messages(client_socket, username):
                 print("Exiting...")
                 client_socket.close()
                 break
+            elif choice == '5':
+                chat_message = input("Enter chat message: ")
+                request = network_pb2.RequestData()
+                request.dataType = network_pb2.RequestData.CHAT
+                request.chatMessage = chat_message
+                client_socket.send(request.SerializeToString())
+                print("Chat message sent.")
+            elif choice == '6':
+                time_position = int(input("Enter current time:"))
+                request = network_pb2.RequestData()
+                request.dataType = network_pb2.RequestData.SYNC
+                request.roomId = room.room_id
+                request.timePosition = time_position  # Host'un mevcut zamanı
+                request.resumed = room.resumed  # Host'un oynatma durumu
+                client_socket.send(request.SerializeToString())
+                print("Current time sent.")
+            elif choice == '7':
+                video_name = input("Enter video name: ")
+                request = network_pb2.RequestData()
+                request.dataType = network_pb2.RequestData.VIDEO_NAME
+                request.roomId = room.room_id
+                request.videoName = video_name  # Host'un video ismi
+                client_socket.send(request.SerializeToString())
+                print("Video name sent.")
+
+
+
             else:
                 print("Invalid choice. Please select a valid option.")
             time.sleep(1)  # Prevent flooding the server

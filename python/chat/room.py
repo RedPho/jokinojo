@@ -7,7 +7,11 @@ class Room:
         self.room_id = Room._id_counter
         self.video_name = ""
         self.users = []
-        self.ready = False
+        self.ready = True
+        self.chat_messages = []
+        self.time_position = 0
+        self.resumed = False
+
         
     def add_user(self, user: User):
         if user not in self.users:
@@ -22,3 +26,12 @@ class Room:
         else:
             print(f"User {user.username} is not in the room.")
             return False
+        
+    def add_chat_message(self, message):
+        """
+        Odaya yeni bir chat mesajı ekler
+        """
+        self.chat_messages.append(message)
+        # Maksimum mesaj sayısını sınırla (opsiyonel)
+        if len(self.chat_messages) > 100:  # Son 100 mesajı tut
+            self.chat_messages = self.chat_messages[-100:]
