@@ -24,7 +24,7 @@ To build the desktop app, at first, cd into the desktop directory.
 ### Notes
 - If you are already comfortable with cmake and vcpkg, you can use your own ways. 
 - If you already have vcpkg in your system, you can use that one if you want, you just need to change the cmake variables CMAKE_TOOLCHAIN_FILE, CMAKE_PREFIX_PATH and Protobuf_LIBRARIES according to your vcpkg paths.
-- You can also use the prebuilt version I provided.(only for Windows, It is already easy to build for Linux)
+- You can also use the [prebuilt version](https://drive.google.com/drive/folders/1HQvRmpQ54Rlii4XynUh39SXDRIkOszrp?usp=sharing) I provided.(only for Windows, It is already easy to build for Linux) 
 
 #### Step 1: Configure the Build Environment
 
@@ -67,7 +67,7 @@ cmake --build . --config release
 
 #### Step 3: Dll files. This step is only needed for Windows
 
-1. Copy [the dll files](https://drive.google.com/drive/folders/1jd8ORURZGhzE2OkEgW9bQzGbAZZx7Ig2?usp=sharing) to the build folder  
+1. Copy [the dll files](https://drive.google.com/drive/folders/1HQvRmpQ54Rlii4XynUh39SXDRIkOszrp?usp=sharing) to the build folder  
 
 #### Step 4: Run the Application
 1. Execute the generated binary:
