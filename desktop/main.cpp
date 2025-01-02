@@ -1,4 +1,6 @@
 #include <wx/wx.h>
+
+#include <memory>
 #include "Networker.hh"
 #include "MediaPlayer.hh"
 
@@ -28,13 +30,14 @@ private:
         wxTextCtrl* chatDisplay{nullptr};
         wxTextCtrl* chatInput{nullptr};
         wxButton* sendButton{nullptr};
+        wxButton* quitButton{nullptr};
     };
 
     UIComponents ui;
     bool isHost{false};
     bool inRoom{false};
-    Networker& networker;
     std::unique_ptr<MediaPlayer> mediaPlayer;
+    std::unique_ptr<Networker> networker;
 
     // Init
     void initializeUI();
@@ -46,12 +49,15 @@ private:
     void handleNetworkResponse(const jokinojo::ResponseData& data);
     void switchToLogin();
     void switchToChat();
+    void switchToConnection();
 
     // Event handlers
     void OnConnect(wxCommandEvent& event);
     void OnCreate(wxCommandEvent& event);
     void OnJoin(wxCommandEvent& event);
     void OnSendMessage(wxCommandEvent& event);
+    void OnQuit(wxCommandEvent& event);
+    void OnClose(wxCloseEvent &event);
 
     // Network response handlers
     void handleCreateRoom(const jokinojo::ResponseData& data);
@@ -67,7 +73,7 @@ private:
 
 MainFrame::MainFrame()
         : wxFrame(nullptr, wxID_ANY, "JoKinoJo", wxDefaultPosition, wxSize(400, 600))
-        , networker(Networker::get_instance())
+        , networker(std::make_unique<Networker>())
         , mediaPlayer(std::make_unique<MediaPlayer>()) {
     initializeUI();
     bindEvents();
@@ -150,12 +156,14 @@ void MainFrame::initializeChatPanel() {
     auto* inputSizer = new wxBoxSizer(wxHORIZONTAL);
     ui.chatInput = new wxTextCtrl(ui.chatPanel, wxID_ANY, "");
     ui.sendButton = new wxButton(ui.chatPanel, wxID_ANY, "Send");
+    ui.quitButton = new wxButton(ui.chatPanel, wxID_ANY, "Quit Room");  // Create the button here
 
     inputSizer->Add(ui.chatInput, 1, wxEXPAND | wxRIGHT, 5);
     inputSizer->Add(ui.sendButton, 0, wxEXPAND);
 
     panelSizer->Add(ui.chatDisplay, 1, wxEXPAND | wxALL, 5);
     panelSizer->Add(inputSizer, 0, wxEXPAND | wxALL, 5);
+    panelSizer->Add(ui.quitButton, 0, wxEXPAND | wxALL, 5);
 
     ui.chatPanel->SetSizer(panelSizer);
 }
@@ -165,9 +173,9 @@ void MainFrame::bindEvents() {
     ui.createButton->Bind(wxEVT_BUTTON, &MainFrame::OnCreate, this);
     ui.joinButton->Bind(wxEVT_BUTTON, &MainFrame::OnJoin, this);
     ui.sendButton->Bind(wxEVT_BUTTON, &MainFrame::OnSendMessage, this);
-
-    // Bind enter key in chat input
+    ui.quitButton->Bind(wxEVT_BUTTON, &MainFrame::OnQuit, this);
     ui.chatInput->Bind(wxEVT_TEXT_ENTER, &MainFrame::OnSendMessage, this);
+    Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnClose, this);
 }
 
 void MainFrame::OnConnect(wxCommandEvent& event) {
@@ -191,22 +199,25 @@ void MainFrame::OnConnect(wxCommandEvent& event) {
 }
 
 bool MainFrame::setupNetworking(const wxString& ip, long port) {
-    networker.setDataCallback([this](jokinojo::ResponseData data) {
-        wxTheApp->CallAfter([this, data]() {
-            handleNetworkResponse(data);
-        });
-    });
-
     try {
-        networker.initialize(ip.ToStdString(), port);
-        std::thread networkIncomingHandlerThread(&Networker::handleIncomingData, &networker);
-        networkIncomingHandlerThread.detach();
-        return true;
+        if (!networker->initialize(ip.ToStdString(), port)) {
+            wxMessageBox(wxString::Format("Failed to initialize networker."),
+                         "Connection Error", wxOK | wxICON_ERROR);
+            return false;
+        }
     } catch (const std::exception& e) {
         wxMessageBox(wxString::Format("Failed to connect: %s", e.what()),
                      "Connection Error", wxOK | wxICON_ERROR);
         return false;
-    }
+    };
+    networker->setDataCallback([this](jokinojo::ResponseData data) {
+        wxTheApp->CallAfter([this, data]() {
+            handleNetworkResponse(data);
+        });
+    });
+    return true;
+
+
 }
 
 void MainFrame::handleNetworkResponse(const jokinojo::ResponseData& data) {
@@ -253,11 +264,11 @@ void MainFrame::handleCreateRoom(const jokinojo::ResponseData& data) {
                  "Room Created", wxOK | wxICON_INFORMATION);
 
     ui.chatDisplay->AppendText( wxString::Format( wxString::Format("Created the room\nRoom id is %i\n", data.roomid()) ) );
-    mediaPlayer->initialize();
-
+    std::cout << "media player initializing.\n";
+    mediaPlayer->initialize(networker.get());
+    std::cout << "media player initialized.\n";
     std::thread mediaActionsHandlerThread(&MediaPlayer::handleMediaActions, mediaPlayer.get());
     mediaActionsHandlerThread.detach();
-
 }
 
 void MainFrame::handleJoinRoom(const jokinojo::ResponseData& data) {
@@ -277,7 +288,7 @@ void MainFrame::handleJoinRoom(const jokinojo::ResponseData& data) {
     for (const auto& username : data.usernames()) {
         ui.chatDisplay->AppendText(username + "\n");
     }
-    mediaPlayer->initialize();
+    mediaPlayer->initialize(networker.get());
 
     std::thread mediaActionsHandlerThread(&MediaPlayer::handleMediaActions, mediaPlayer.get());
     mediaActionsHandlerThread.detach();
@@ -331,6 +342,13 @@ void MainFrame::handleNullResponse(const jokinojo::ResponseData& data) {
                  wxOK | wxICON_WARNING);
 }
 
+void MainFrame::switchToConnection() {
+    ui.loginPanel->Hide();
+    ui.chatPanel->Hide();
+    ui.connectionPanel->Show();
+    Layout();
+}
+
 void MainFrame::switchToLogin() {
     ui.loginPanel->Show();
     Layout();
@@ -349,7 +367,7 @@ void MainFrame::OnCreate(wxCommandEvent& event) {
         return;
     }
 
-    networker.requestCreateRoom(username.ToStdString());
+    networker->requestCreateRoom(username.ToStdString());
 }
 
 void MainFrame::OnJoin(wxCommandEvent& event) {
@@ -366,16 +384,58 @@ void MainFrame::OnJoin(wxCommandEvent& event) {
             wxMessageBox("Invalid room ID", "Error", wxOK | wxICON_ERROR);
             return;
         }
-        networker.requestJoinRoom(roomIdNum, nickname.ToStdString());
+        networker->requestJoinRoom(roomIdNum, nickname.ToStdString());
     }
 }
 
 void MainFrame::OnSendMessage(wxCommandEvent& event) {
     wxString message = ui.chatInput->GetValue();
     if (!message.IsEmpty()) {
-        networker.sendChatMessage(message.ToStdString());
+        networker->sendChatMessage(message.ToStdString());
         ui.chatInput->Clear();
     }
+}
+
+void MainFrame::OnQuit(wxCommandEvent& event) {
+    if (networker && networker->isConnected()) {
+        networker->requestQuit();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        networker = std::make_unique<Networker>(); // Destroy and create new instance
+
+    }
+
+    // Reset state
+    inRoom = false;
+    isHost = false;
+    if (mediaPlayer) {
+        mediaPlayer->stopMediaActions();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        mediaPlayer->destroy();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        mediaPlayer = std::make_unique<MediaPlayer>();
+
+    }
+
+    ui.chatDisplay->Clear();
+    ui.loginPanel->Hide();
+    ui.chatPanel->Hide();
+    ui.nicknameInput->Clear();
+    switchToConnection();
+}
+
+
+void MainFrame::OnClose(wxCloseEvent &event) {
+    if (networker->isConnected()) {
+        networker->requestQuit();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        networker->cleanup();
+    }
+
+    if (mediaPlayer) {
+        mediaPlayer->destroy();
+    }
+
+    event.Skip();
 }
 
 class App : public wxApp {

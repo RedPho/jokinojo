@@ -9,55 +9,59 @@
 #include <network.pb.h>
 using asio::ip::tcp;
 
-Networker& Networker::get_instance(){
-    static Networker n;
-    return n;
+Networker::Networker() = default;
+
+Networker::~Networker() {
+    cleanup();
 }
 
 bool Networker::initialize(std::string ip, int port) {
-    Networker& networker = get_instance();
+    cleanup(); // Cleanup any existing connection
+
+    try {
+        tcp::resolver resolver(m_io_context);
+        tcp::resolver::results_type endpoints = resolver.resolve(ip, std::to_string(port));
+
+        asio::connect(m_socket, endpoints);
+
+        // Start network thread
+        m_networkThread = std::thread(&Networker::handleIncomingData, this);
+
+        std::cout << "Connected to server\n";
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to connect: " << e.what() << "\n";
+        return false;
+    }
+}
+
+void Networker::handleIncomingData() {
+    std::cout << "handlingIncomingData" << "\n";
+    if (!m_socket.is_open()) {
+        std::cerr << "Socket is not open.\n";
+        return;
+    }
 
     while (true) {
         try {
-            tcp::resolver resolver(m_io_context);
-            // Resolve the server's IP address and port
-            tcp::resolver::results_type endpoints = resolver.resolve(ip, std::to_string(port));
+            char data[1024];
+            if (!m_socket.is_open()) break;
 
-            // Perform synchronous connection
-            asio::connect(m_socket, endpoints);
-
-            std::cout << "Connected to server\n";
-            return true;
-        } catch (const std::exception& e) {
-            std::cerr << "Failed to connect: " << e.what() << "\n";
-            std::cout << "Reconnecting in 5 seconds...\n";
-            std::this_thread::sleep_for(std::chrono::seconds(5));
-        }
-    }
-
-    return false;
-}
-
-bool Networker::handleIncomingData(){
-    std::cout << "handlingIncomingData" << "\n";
-    char data[1024];
-    if (!m_socket.is_open()) {
-        std::cerr << "Socket is not open.\n";
-        return false;
-    }
-    while (true) {
-        try{
             std::cout << "trying to read" << "\n";
             std::size_t bytesRead = m_socket.read_some(asio::buffer(data, sizeof(data)));
+
             std::string receivedData(data, bytesRead);
             std::cout << bytesRead << "bytes and the data: " << receivedData << "\n";
+
             jokinojo::ResponseData responseData;
-            responseData.ParseFromString(receivedData);
-            if (m_dataCallback) {
-                m_dataCallback(responseData);
+            if (responseData.ParseFromString(receivedData)) {
+                if (m_dataCallback) {
+                    m_dataCallback(responseData);
+                }
             }
-        } catch  (std::exception& e) {
+        } catch (std::exception& e) {
             std::cerr << "Connection lost: " << e.what() << "\n";
+            return;
         }
     }
 }
@@ -77,7 +81,6 @@ bool Networker::requestJoinRoom(int roomId, std::string username) {
 
 bool Networker::requestCreateRoom(std::string username) {
     jokinojo::RequestData networkData;
-    std::error_code error;
     networkData.set_datatype(jokinojo::RequestData_DataType_CREATE_ROOM);
     networkData.set_username(username);
 
@@ -100,6 +103,14 @@ bool Networker::sendFileName(std::string fileName) {
     networkData.set_datatype(jokinojo::RequestData_DataType_VIDEO_NAME);
     networkData.set_videoname(fileName);
     return serializeAndSendData(networkData);
+}
+
+bool Networker::requestQuit() {
+    jokinojo::RequestData networkData;
+    networkData.set_datatype(jokinojo::RequestData_DataType_QUIT);
+    serializeAndSendData(networkData);
+    m_socket.close();
+    return true;
 }
 
 bool Networker::sendReadyStatus() {
@@ -129,4 +140,23 @@ bool Networker::serializeAndSendData(jokinojo::RequestData networkData) {
         return false;
     }
     return true;
+}
+
+void Networker::cleanup() {
+
+    if (m_socket.is_open()) {
+        std::error_code ec;
+        m_socket.shutdown(asio::ip::tcp::socket::shutdown_both, ec);
+        m_socket.close();
+    }
+
+    m_io_context.stop();
+
+    // Join the thread if it's running
+    if (m_networkThread.joinable()) {
+        m_networkThread.join();
+    }
+
+    // Reset io_context to allow reuse
+    m_io_context.restart();
 }
