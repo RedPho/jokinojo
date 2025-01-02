@@ -35,6 +35,8 @@ public:
     double getTimePositionSeconds();
     int getTimePositionMiliseconds();
     std::string getFileName();
+
+    void handleHook(mpv_event *event);
 };
 
 
