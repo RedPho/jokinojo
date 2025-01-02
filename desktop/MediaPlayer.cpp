@@ -6,28 +6,50 @@
 #include "MediaPlayer.hh"
 #include "Networker.hh"
 
+
 void MediaPlayer::check_mpv_error(int status) {
     if (status < 0) {
         std::cout << "mpv API error:\n" << mpv_error_string(status);
     }
 }
 
-bool MediaPlayer::initialize() {
+bool MediaPlayer::initialize(Networker* networker) {
+    m_networker = networker;
+
+    // Create new mpv instance
+    std::cout << "mpv_create calling\n";
+    mpv = mpv_create();
+    std::cout << "mpv_create called\n";
+
     if (!mpv) {
         std::cout << "failed creating context\n";
         return false;
     }
 
-    // Enable default key bindings
-    check_mpv_error(mpv_set_option_string(mpv, "input-default-bindings", "yes"));
-    check_mpv_error(mpv_set_option_string(mpv, "input-vo-keyboard", "yes"));
+    std::cout << "key bindings setting.\n";
+
+    // key bindings
     int val = 1;
+    if (isHost()) {
+        check_mpv_error(mpv_set_option_string(mpv, "input-default-bindings", "yes"));
+        check_mpv_error(mpv_set_option_string(mpv, "input-vo-keyboard", "yes"));
+    } else {
+        check_mpv_error(mpv_set_option_string(mpv, "input-default-bindings", "no"));
+        check_mpv_error(mpv_set_option_string(mpv, "input-vo-keyboard", "no"));
+        val = 0;
+    }
+
     check_mpv_error(mpv_set_option(mpv, "osc", MPV_FORMAT_FLAG, &val));
+    std::cout << "mpv_initialize calling.\n";
     check_mpv_error(mpv_initialize(mpv));
+    std::cout << "mpv_initialize called.\n";
+
     const char *idle_cmd[] = {"loadfile", "no", NULL};
     check_mpv_error(mpv_command(mpv, idle_cmd));
     const char *force_window_cmd[] = {"set", "force-window", "yes", NULL};
     check_mpv_error(mpv_command(mpv, force_window_cmd));
+    std::cout << "media player init is successful.\n";
+
     return true;
 }
 
@@ -74,34 +96,52 @@ bool MediaPlayer::getIsPaused() {
     return isPaused == 1;
 }
 
+void MediaPlayer::destroy() {
+    if (mpv) {
+        mpv_terminate_destroy(mpv);  // Properly destroy the MPV instance
+        mpv = nullptr;  // Reset the pointer
+        m_paused = false;
+    }
+}
+
+MediaPlayer::~MediaPlayer() {
+    destroy();
+}
+
 void MediaPlayer::handleMediaActions() {
-    while (true) {
+    while (!m_stopMediaActions) {
+        if(!mpv) {
+            std::cout << "there is no mpv context. handlmediaactions thread.\n";
+            return;
+        }
         mpv_event *event = mpv_wait_event(mpv, 0);
         if (isHost()) {
-            bool oldIsPaused = m_paused;              // Capture the current paused state.
+            bool oldIsPaused = m_paused; // Capture the current paused state.
             bool currentPaused = getIsPaused();
 
-            if (oldIsPaused != currentPaused || event->event_id == MPV_EVENT_SEEK) { // this get also sets the m_paused property. I will change it to look more stateless.
+            if (oldIsPaused != currentPaused || event->event_id == MPV_EVENT_SEEK) {
                 m_paused = currentPaused;
                 int timePosData = getTimePositionMiliseconds();
                 bool pausedData = currentPaused;
-                std::cout << "is Paused?: " << pausedData << "\n";
-                m_networker.sendMediaStatus(timePosData, pausedData);
+                m_networker->sendMediaStatus(timePosData, pausedData);
             } else if (event->event_id == MPV_EVENT_FILE_LOADED) {
-                std::cout << "host\n";
-                std::cout << "file loaded\n";
                 std::string fileName = getFileName();
-                std::cout << "file name:" << fileName;
-                m_networker.sendFileName(fileName);
+                m_networker->sendFileName(fileName);
+                setMediaPausedStatus(true);
+                
             }
         } else { // is not host(client)
 
             if (event->event_id == MPV_EVENT_FILE_LOADED) {
                 std::cout << "not host\n";
-
-                m_networker.sendReadyStatus();
+                m_networker->sendReadyStatus();
+                setMediaPausedStatus(true);
             }
         }
-
     }
+    return;
+}
+
+void MediaPlayer::stopMediaActions() {
+    m_stopMediaActions = true;
 }
