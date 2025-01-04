@@ -11,14 +11,35 @@ rooms_lock = threading.Lock()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def send_with_length(client_socket, message):
+    message_length = len(message)
+    client_socket.sendall(message_length.to_bytes(4, byteorder='big') + message)
+
+def receive_with_length(client_socket):
+    try:
+        # Read the first 4 bytes to get the message length
+        raw_msglen = client_socket.recv(4)
+        if not raw_msglen:
+            return None
+        msglen = int.from_bytes(raw_msglen, byteorder='big')
+
+        # Read the message data based on the length
+        data = b''
+        while len(data) < msglen:
+            packet = client_socket.recv(msglen - len(data))
+            if not packet:
+                return None
+            data += packet
+        return data
+    except Exception as e:
+        print(f"Error receiving data: {e}")
+        return None
+
+
 def handle_client(user: User):
     while True:
         try:
-            ###
-            ###    BUNU DUZELT 1024 YERINE BASINA MESAJ BOYUTU EKLE
-            ###
-
-            message = user.socket.recv(1024)
+            message = receive_with_length(user.socket)
             if not message:
                 logging.info(f"{user.username} disconnected (empty message).")
                 break
@@ -27,11 +48,7 @@ def handle_client(user: User):
             response = handle_request(message, user)
 
             try:
-                ###
-                ###    BUNU DUZELT BASINA MESAJ BOYUTU EKLE
-                ###
-
-                user.socket.send(response.SerializeToString())
+                send_with_length(user.socket, response.SerializeToString())
                 logging.info(f"Response sent to {user.username}.")
             except Exception as e:
                 logging.warning(f"Error sending response to {user.username}: {e}")
@@ -138,7 +155,7 @@ def share_file(request, user):
                     piece_data.fileShare.dataType = pb.FileShare.FINISHED
 
                 try:
-                    send_to.socket.send(piece_data.SerializeToString())
+                    send_with_length(send_to.socket, piece_data.SerializeToString())
                     logging.info(f"File message with type {piece_data.fileShare.dataType} sent to {send_to.username}.")
                 except Exception as e:
                     logging.warning(f"Error sending file message to {send_to.username}: {e}")
@@ -147,6 +164,7 @@ def share_file(request, user):
 
                 missing_data = pb.ResponseData()
                 missing_data.dataType = pb.ResponseData.FILE_SHARE
+                missing_data.username = user.username
 
                 if request.fileShare.datatype == pb.FileShare.MISSING_INFO:
                     missing_data.fileShare.dataType = pb.FileShare.MISSING_INFO
@@ -155,7 +173,7 @@ def share_file(request, user):
                     missing_data.fileShare.missingPieces = request.fileShare.missingPieces
 
                 try:
-                    host.socket.send(missing_data.SerializeToString())
+                    send_with_length(host.socket, missing_data.SerializeToString())
                     logging.info(f"File message with type {missing_data.fileShare.dataType} sent to {host.username}.")
                 except Exception as e:
                     logging.warning(f"Error sending file message to {host.username}: {e}")
@@ -169,7 +187,7 @@ def share_file(request, user):
                 file_request.username = user.username
 
                 try:
-                    host.socket.send(file_request.SerializeToString())
+                    send_with_length(host.socket, file_request.SerializeToString())
                     logging.info(f"File request sent to {host.username}.")
                 except Exception as e:
                     logging.warning(f"Error sending request to {host.username}: {e}")
@@ -267,7 +285,7 @@ def sync(request, user):
                 continue
             else:
                 try:
-                    current_user.socket.send(response.SerializeToString())
+                    send_with_length(current_user.socket, response.SerializeToString())
                     logging.info(f"Sync info sent to {current_user.username}.")
                 except Exception as e:
                     logging.warning(f"Failed to send sync info to {current_user.username}: {e}")
@@ -325,7 +343,7 @@ def chat(request, user):
                     response.usernames.extend([f"{user.username}: {chat_message}"])
 
                     try:
-                        current_user.socket.send(response.SerializeToString())
+                        send_with_length(current_user.socket, response.SerializeToString())
                         logging.info(f"Chat mesajı {current_user.username} kullanıcısına iletildi")
                     except Exception as e:
                         logging.warning(f"{current_user.username} kullanıcısına mesaj gönderilemedi: {e}")
@@ -356,7 +374,7 @@ def send_new_userlist_to_current_users(room, user, flag):
         response.videoName = room.video_name
 
         try:
-            current_user.socket.send(response.SerializeToString())
+            send_with_length(current_user.socket, response.SerializeToString())
             logging.info(f"Updated user list sent to {current_user.username}.")
         except Exception as e:
             logging.warning(f"Failed to send user list to {current_user.username}: {e}")

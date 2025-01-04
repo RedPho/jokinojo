@@ -8,7 +8,9 @@ from room import Room
 
 
 CHUNK_SIZE = 1024 * 1024 * 4 # 4 MB
+shares_file = False
 chosen_file_path = None  # Define at the module level
+shared_file_chunks = {}
 received_chunks = {}
 file_name = None
 file_size = 0
@@ -21,24 +23,18 @@ room_lock = threading.Lock()  # Lock for thread safety
 def receive_messages(client_socket):
     while True:
         try:
-
-            ###
-            ###    BUNU DUZELT 1024 YERINE BASINA MESAJ BOYUTU EKLE
-            ###
-
-
-            data = client_socket.recv(1024)
+            data = receive_with_length(client_socket)
             if not data:
                 print("Disconnected from the server.")
                 break
-            handle_response(data)
+            handle_response(client_socket, data)
         except Exception as e:
             print(f"Error receiving data: {e}")
             client_socket.close()
             break
 
 # Function to handle the response from the server
-def handle_response(raw_data):
+def handle_response(client_socket, raw_data):
     global room
     try:
         response = network_pb2.ResponseData()
@@ -75,14 +71,70 @@ def handle_response(raw_data):
                 room.is_playing = response.isPlaying  # Oynatma durumunu güncelliyoruz.
             print(f"Video synced: Current time is {room.current_time}, is playing: {room.is_playing}")
         elif response_type == network_pb2.ResponseData.FileShare:
-            ### burayi da yazmayi unutma
+            handle_fileshare(client_socket, response)
             print(22)
         else:
             print("Unknown response type received.")
     except Exception as e:
         print(f"Error handling response: {e}")
 
-def receive_with_length(client_socket)
+
+def handle_fileshare(client_socket, response):
+    global shares_file
+    global shared_file_chunks
+
+    if response.HasField("fileShare"):
+        if shares_file:
+            if response.fileShare.datatype == network_pb2.FileShare.MISSING_INFO:
+                file_info = network_pb2.RequestData()
+                file_info.dataType = network_pb2.FILE_SHARE
+                file_info.username = response.username
+
+                file_info_message = network_pb2.FileShare()
+                file_info_message.datatype = network_pb2.FileShare.FILE_INFO
+                file_info_message.fileName = os.path.basename(chosen_file_path)
+                file_info_message.fileSize = os.path.getsize(chosen_file_path)
+                file_info_message.hash = calculate_hash(chosen_file_path)
+
+                send_with_length(client_socket, file_info.SerializeToString())
+
+            elif response.fileShare.datatype == network_pb2.FileShare.MISSING:
+                file_piece = network_pb2.RequestData()
+                file_piece.dataType = network_pb2.FILE_SHARE
+
+                file_piece_message = network_pb2.FileShare()
+                file_piece_message.datatype = network_pb2.FileShare.PIECE
+
+                missing_index = response.fileShare.missingPieces
+                for index in missing_index:
+                    file_piece_message.pieceIndex = index
+                    file_piece_message.pieceData = shared_file_chunks[index]
+
+                    send_with_length(client_socket, file_piece.SerializeToString())
+
+
+
+
+
+def receive_with_length(client_socket):
+    try:
+        # Read the first 4 bytes to get the message length
+        raw_msglen = client_socket.recv(4)
+        if not raw_msglen:
+            return None
+        msglen = int.from_bytes(raw_msglen, byteorder='big')
+
+        # Read the message data based on the length
+        data = b''
+        while len(data) < msglen:
+            packet = client_socket.recv(msglen - len(data))
+            if not packet:
+                return None
+            data += packet
+        return data
+    except Exception as e:
+        print(f"Error receiving data: {e}")
+        return None
 
 def send_with_length(client_socket, message):
     message_length = len(message)
@@ -99,7 +151,7 @@ def send_messages(client_socket, username):
                 request = network_pb2.RequestData()
                 request.dataType = network_pb2.RequestData.CREATE_ROOM
                 request.username = username
-                client_socket.send(request.SerializeToString())
+                send_with_length(client_socket, request.SerializeToString())
                 print("Room creation request sent.")
             elif choice == '2':
                 request_room_id = input("Enter Room ID to join: ")
@@ -108,7 +160,7 @@ def send_messages(client_socket, username):
                     request.dataType = network_pb2.RequestData.JOIN_ROOM
                     request.username = username
                     request.roomId = int(request_room_id)
-                    client_socket.send(request.SerializeToString())
+                    send_with_length(client_socket, request.SerializeToString())
                     print("Room join request sent.")
                 else:
                     print("Invalid Room ID. Please enter a numeric value.")
@@ -118,7 +170,7 @@ def send_messages(client_socket, username):
                         request = network_pb2.RequestData()
                         request.dataType = network_pb2.RequestData.QUIT
                         request.roomId = room.room_id
-                        client_socket.send(request.SerializeToString())
+                        send_with_length(client_socket, request.SerializeToString())
                         print(f"Room leave request sent for room ID: {room.room_id}.")
                     else:
                         print("You are not in a room.")
@@ -131,16 +183,16 @@ def send_messages(client_socket, username):
                 request = network_pb2.RequestData()
                 request.dataType = network_pb2.RequestData.CHAT
                 request.chatMessage = chat_message
-                client_socket.send(request.SerializeToString())
+                send_with_length(client_socket, request.SerializeToString())
                 print("Chat message sent.")
             elif choice == '6':
                 time_position = int(input("Enter current time:"))
                 request = network_pb2.RequestData()
                 request.dataType = network_pb2.RequestData.SYNC
                 request.roomId = room.room_id
-                request.timePosition = time_position  # Host'un mevcut zamanı
-                request.resumed = room.resumed  # Host'un oynatma durumu
-                client_socket.send(request.SerializeToString())
+                request.timePosition = time_position  # Host's current time
+                request.resumed = room.resumed  # Host's play state
+                send_with_length(client_socket, request.SerializeToString())
                 print("Current time sent.")
             elif choice == '7':
                 files = os.listdir('.')
@@ -156,7 +208,7 @@ def send_messages(client_socket, username):
                     request.dataType = network_pb2.RequestData.VIDEO_NAME
                     request.roomId = room.room_id
                     request.videoName = chosen_file
-                    client_socket.send(request.SerializeToString())
+                    send_with_length(client_socket, request.SerializeToString())
                     print("Video name sent.")
                 else:
                     print("Invalid choice.")
@@ -164,9 +216,8 @@ def send_messages(client_socket, username):
                 request = network_pb2.RequestData()
                 request.dataType = network_pb2.RequestData.FILE_SHARE
                 request.roomId = room.room_id
-                client_socket.send(request.SerializeToString())
+                send_with_length(client_socket, request.SerializeToString())
                 print("File share request sent")
-
             else:
                 print("Invalid choice. Please select a valid option.")
             time.sleep(1)  # Prevent flooding the server
@@ -176,10 +227,11 @@ def send_messages(client_socket, username):
             break
 
 def divide_file_into_chunks(file_path):
-    ## dosyayı binary olarak okumaya başlar
+    global shared_file_chunks
     with open(file_path, "rb") as f:
         index = 0
         while chunk := f.read(CHUNK_SIZE):
+            shared_file_chunks[index] = chunk
             yield index, chunk
             index += 1
 
@@ -205,7 +257,9 @@ def calculate_hash(file_path):
 
 def send_file(client_socket, username):
     global chosen_file_path
+    global shares_file
 
+    shares_file = True
     ## Once file info gönderilir
     file_info = network_pb2.RequestData()
     file_info.dataType = network_pb2.FILE_SHARE
@@ -220,7 +274,7 @@ def send_file(client_socket, username):
 
     ## file share objesini daha sonra request objesi icine ekledim
     file_info.fileShare = file_info_message
-    client_socket.send(file_info.SerializeToString())
+    send_with_length(client_socket, file_info.SerializeToString())
 
     ## Sonra dosya chunk chunk gönderilir
     for index, chunk in divide_file_into_chunks(chosen_file_path):
@@ -233,7 +287,7 @@ def send_file(client_socket, username):
         file_piece_message.pieceData = chunk
 
         file_piece.fileShare = file_piece_message
-        client_socket.send(file_piece.SerializeToString())
+        send_with_length(client_socket, file_piece.SerializeToString())
 
     file_finished = network_pb2.RequestData()
     file_finished.dataType = network_pb2.FILE_SHARE
@@ -242,7 +296,7 @@ def send_file(client_socket, username):
     file_finished_message.datatype = network_pb2.FileShare.FINISHED
 
     file_finished.fileShare = file_finished_message
-    client_socket.send(file_finished.SerializeToString())
+    send_with_length(client_socket, file_finished.SerializeToString())
 
 
 

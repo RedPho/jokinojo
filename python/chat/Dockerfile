@@ -7,8 +7,9 @@ WORKDIR /app
 # Copy all files into the container
 COPY . /app
 
-# Install any dependencies (e.g., protobuf)
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install protobuf with retry mechanism
+RUN pip install --no-cache-dir -r requirements.txt --retries 5 --timeout 30
 
 # Expose the port the server listens on
 EXPOSE 5000
