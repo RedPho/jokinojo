@@ -13,6 +13,19 @@ rooms_lock = threading.Lock()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def get_request_name(request_type_number):
+    request_type_map = {
+        0: "NULL",
+        1: "CREATE_ROOM",
+        2: "JOIN_ROOM",
+        3: "QUIT",
+        4: "SYNC",
+        5: "VIDEO_NAME",
+        6: "READY",
+        7: "CHAT"
+    }
+    return request_type_map.get(request_type_number, "UNKNOWN")
+
 def handle_client(user: User):
     while True:
         try:
@@ -50,7 +63,7 @@ def handle_request(raw_data, user):
         return response
 
     request_type = request.dataType
-    logging.info(f"Request type {request_type} received from {user.username}.")
+    logging.info(f"Request type {get_request_name(request_type)} received from {user.username}.")
 
     if request_type == pb.RequestData.CREATE_ROOM:
         return create_room(request, user)
@@ -257,9 +270,10 @@ def user_left(request, user):
     with rooms_lock:
         target_room = user.room
         target_room.remove_user(user)
+        logging.info(f"Room with id:{target_room.room_id} has {len(target_room.users)} users")
         if len(target_room.users) == 0:##odada kimse yoksa odayı sil
             rooms.remove(target_room)
-            logging.info(f"Room with id:{target_room.room_id} has removed")
+            logging.info(f"Room with id:{target_room.room_id} has been removed.")
         else:
             response = pb.ResponseData()
             response.dataType = pb.ResponseData.USER_LEFT
