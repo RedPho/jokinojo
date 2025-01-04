@@ -133,7 +133,6 @@ def join_room(request, user):
 
 
 def sync(request, user):
-    user.username = request.username
     time_position = request.timePosition
     resumed = request.resumed
     target_room = user.room
@@ -166,7 +165,6 @@ def sync(request, user):
         return response
 
 def video_name(request, user):
-    user.username = request.username
     user.ready = True
     video_name = request.videoName
     target_room = user.room
