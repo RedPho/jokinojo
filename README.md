@@ -1,9 +1,34 @@
 # JoKinoJo
-**JoKinoJo** is a media player that synchronises media playback with your friends.
+**JoKinoJo** is a media player that synchronises media playback with your friends.  
+
+## Server
+
+### Prerequisites
+1. [Python3](https://www.python.org/)
+2. [Protobuf](https://github.com/protocolbuffers/protobuf)
+
+### Setup and Run Instructions
+
+1. To start the server, at first, cd into the python directory of this project.  
+2. Compile the protobuf file.  
+```bash
+protoc --python_out=. network.proto
+```
+3. Create and activate the python virtual environment.  
+4. Install protobuf python library with pip.  
+5. Start the server.  
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install protobuf
+python server.py
+```
+
 
 ## Desktop
 
-To build the desktop app, at first, cd into the desktop directory.
+To build the desktop app, at first, cd into the desktop directory of this project.
 
 ### Prerequisites
 
