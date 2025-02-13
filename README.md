@@ -1,5 +1,5 @@
 # JoKinoJo
-**JoKinoJo** is a media player that synchronises media playback with your friends.  
+**JoKinoJo** is a media player that synchronises media playback with your friends. Allows you and your friend to watch media together.
 
 ## Server
 
